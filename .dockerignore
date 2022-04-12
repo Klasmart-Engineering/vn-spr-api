@@ -1,0 +1,13 @@
+.DS_Store
+
+*.log
+*.md
+
+Dockerfile
+docker-compose.yml
+
+.git
+.idea
+.vscode
+
+.env

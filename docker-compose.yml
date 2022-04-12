@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: node-server
+    environment:
+      SERVICE_LABEL: vn_student_progress_report
+    expose:
+      - '4200'
+    ports:
+      - '4200:4200'
