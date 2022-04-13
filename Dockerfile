@@ -1,6 +1,7 @@
 FROM node:17-alpine
 
 WORKDIR /usr/app
+
 COPY package.json tsconfig.json ./
 COPY src ./src
 

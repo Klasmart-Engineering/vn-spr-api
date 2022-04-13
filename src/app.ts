@@ -1,12 +1,28 @@
+import { config } from 'dotenv';
 import express, { NextFunction, Request, Response } from 'express';
 import createError, { HttpError } from 'http-errors';
+import swaggerUi from 'swagger-ui-express';
 
 import indexRouter from './routes';
 
 const app = express();
+config();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static('public'));
+
+if (process.env.SHOW_SWAGGER === 'true') {
+  app.use(
+    '/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(undefined, {
+      swaggerOptions: {
+        url: '/swagger.json',
+      },
+    })
+  );
+}
 
 app.use('/', indexRouter);
 
