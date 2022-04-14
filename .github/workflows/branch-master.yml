@@ -1,0 +1,60 @@
+name: Branches
+
+env:
+  ECR_REGISTRY: 942095822719.dkr.ecr.eu-west-2.amazonaws.com
+  ECR_REPOSITORY: kidsloop-vietnam-spr-api
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: https://npm.pkg.github.com/
+
+      - name: Find node_modules cache
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Get npm version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@master
+
+      - name: Build and and push image to Amazon ECR
+        run: |
+          set +x
+          export VERSION_TAG=$(echo "v${{ steps.package-version.outputs.current-version }}")
+          export BRANCH_TAG=$(echo "${GITHUB_REF_NAME}" | sed -E 's/([^0-9a-zA-Z]+)/-/g' | awk '{print tolower($0)}')
+          docker build -t $ECR_REPOSITORY:$BRANCH_TAG-latest .
+          docker tag $ECR_REPOSITORY:$BRANCH_TAG-latest $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH_TAG-latest
+          docker tag $ECR_REPOSITORY:$BRANCH_TAG-latest $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH_TAG-$VERSION_TAG
+          docker tag $ECR_REPOSITORY:$BRANCH_TAG-latest $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH_TAG-${GITHUB_SHA::7}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH_TAG-latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH_TAG-$VERSION_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$BRANCH_TAG-${GITHUB_SHA::7}
