@@ -21,7 +21,7 @@ describe('GET /ping', () => {
     // something here
   });
 
-  it('returns 200', async () => {
+  it('returns 200 even if token is empty', async () => {
     const res = await requestWithSupertest.get('/ping');
 
     expect(res.status).toBe(200);

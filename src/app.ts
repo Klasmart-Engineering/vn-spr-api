@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import createError, { HttpError } from 'http-errors';
 import swaggerUi from 'swagger-ui-express';
 
+import { checkToken } from './middlewares/auth';
 import indexRouter from './routes';
 
 const app = express();
@@ -23,6 +24,21 @@ if (process.env.SHOW_SWAGGER === 'true') {
     })
   );
 }
+
+type MiddlewareFunction = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => void;
+const unless = (middleware: MiddlewareFunction, ...paths: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const pathCheck = paths.some((path) => path === req.path);
+    pathCheck ? next() : middleware(req, res, next);
+  };
+};
+
+// Middleware
+app.use(unless(checkToken, '/ping'));
 
 app.use('/', indexRouter);
 

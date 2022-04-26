@@ -4,7 +4,7 @@ import PingController from '../controllers/ping';
 
 const router = express.Router();
 
-router.get('/ping', async (_, res) => {
+router.get('/', async (_, res) => {
   const controller = new PingController();
   const response = await controller.getMessage();
   return res.send(response);

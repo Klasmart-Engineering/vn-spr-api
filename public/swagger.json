@@ -6,6 +6,42 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
+			"Permission": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"category": {
+						"type": "string"
+					},
+					"group": {
+						"type": "string"
+					},
+					"level": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"allow": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"category",
+					"group",
+					"level",
+					"description",
+					"allow"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"PingResponse": {
 				"properties": {
 					"message": {
@@ -24,7 +60,7 @@
 	"info": {
 		"title": "vn-spr-api",
 		"version": "1.0.0",
-		"description": "(VN) Student Progress Report API",
+		"description": "(VN) Student Performance Report API",
 		"license": {
 			"name": "ISC"
 		},
@@ -34,6 +70,42 @@
 	},
 	"openapi": "3.0.0",
 	"paths": {
+		"/permissions/{name}": {
+			"get": {
+				"operationId": "getPermission",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/Permission"
+										}
+									],
+									"nullable": true
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"permissions"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "name",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/ping": {
 			"get": {
 				"operationId": "GetMessage",
