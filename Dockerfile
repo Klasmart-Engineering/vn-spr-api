@@ -12,7 +12,7 @@ COPY src ./src
 RUN echo -e "\
 progress=false \n\
 //npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN \n\
-@kl-engineering:registry=https://npm.pkg.github.co \
+@kl-engineering:registry=https://npm.pkg.github.com \
 " > .npmrc && npm install && rm -r .npmrc
 
 # Second build
