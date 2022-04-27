@@ -1,3 +1,4 @@
+import { ApolloError } from '@apollo/client/errors';
 import express from 'express';
 import createError from 'http-errors';
 
@@ -16,10 +17,15 @@ router.get('/:name', async (req, res) => {
     const response = await controller.getPermission(permissionName, req);
     return res.send(response);
   } catch (error) {
-    const e = JSON.parse(error as string);
-    const statusCode = e.statusCode ?? 500;
-    const errorMessage = e.result.errors[0].message;
-    return res.status(statusCode).json({ message: errorMessage });
+    let errorResponse: ApolloError | { message: string };
+    if (error instanceof ApolloError) {
+      errorResponse = error;
+    } else if (error instanceof Error) {
+      errorResponse = { message: error.message };
+    } else {
+      errorResponse = { message: error as string };
+    }
+    return res.status(500).send(errorResponse);
   }
 });
 

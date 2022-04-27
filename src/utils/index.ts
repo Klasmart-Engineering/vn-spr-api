@@ -1,3 +1,5 @@
+export * from "./catchAsync";
+
 /**
  * Stringified UUIDv4.
  * See [RFC 4112](https://tools.ietf.org/html/rfc4122)

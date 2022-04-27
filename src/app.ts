@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import express, { NextFunction, Request, Response } from 'express';
+import express, { NextFunction, Request, RequestHandler, Response } from 'express';
 import createError, { HttpError } from 'http-errors';
 import swaggerUi from 'swagger-ui-express';
 
@@ -25,12 +25,7 @@ if (process.env.SHOW_SWAGGER === 'true') {
   );
 }
 
-type MiddlewareFunction = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => void;
-const unless = (middleware: MiddlewareFunction, ...paths: string[]) => {
+const unless = (middleware: RequestHandler, ...paths: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const pathCheck = paths.some((path) => path === req.path);
     pathCheck ? next() : middleware(req, res, next);
