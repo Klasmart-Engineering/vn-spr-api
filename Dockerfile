@@ -1,4 +1,5 @@
-FROM node:16-alpine
+# First build
+FROM node:16-alpine AS build
 
 ARG NODE_AUTH_TOKEN
 
@@ -6,18 +7,21 @@ WORKDIR /usr/app
 
 COPY package.json tsconfig.json ./
 
-RUN echo "progress=false" > .npmrc
-
-RUN echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
-
-RUN echo "@kl-engineering:registry=https://npm.pkg.github.com" > .npmrc
-
 COPY src ./src
 
-RUN npm install
+RUN echo -e "\
+progress=false \n\
+//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN \n\
+@kl-engineering:registry=https://npm.pkg.github.co \
+" > .npmrc && npm install && rm -r .npmrc
 
-RUN rm -f .npmrc
+# Second build
+FROM node:16-alpine
+
+WORKDIR /usr/app
 
 EXPOSE 4200
+
+COPY --from=build /usr/app /usr/app
 
 CMD npm start
