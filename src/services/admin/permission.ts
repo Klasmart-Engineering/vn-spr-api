@@ -7,7 +7,7 @@ export const GET_PERMISSION = gql`
       directionArgs: { count: $count, cursor: $cursor }
       filter: {
         AND: [
-          { id: { operator: eq, value: $permissionName } }
+          { name: { operator: eq, value: $permissionName } }
         ]
       }
     ) {
