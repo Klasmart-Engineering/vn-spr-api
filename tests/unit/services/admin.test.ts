@@ -34,4 +34,27 @@ describe('AdminService', () => {
       expect(typeof permission).toEqual('object');
     });
   });
+
+  describe('#getUsersByIds', () => {
+    it('returns users', async () => {
+      const adminService = await AdminService.getInstance('jwt');
+      const users = await adminService.getUsersByIds([
+        '10f60763-c32b-4d48-9777-a0c1d28f6e85',
+        '5abd2d6e-fa9f-4026-a9c1-b6b47e557019',
+      ]);
+
+      expect(users).toEqual([
+        {
+          id: '10f60763-c32b-4d48-9777-a0c1d28f6e85',
+          givenName: 'John',
+          familyName: 'Doe',
+        },
+        {
+          id: '5abd2d6e-fa9f-4026-a9c1-b6b47e557019',
+          givenName: 'Jane',
+          familyName: 'Doe',
+        },
+      ]);
+    });
+  });
 });

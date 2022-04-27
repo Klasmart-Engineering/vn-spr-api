@@ -2,6 +2,7 @@ import {
   ApolloClient,
   DocumentNode,
   from,
+  gql,
   HttpLink,
   InMemoryCache,
   NormalizedCacheObject,
@@ -11,13 +12,17 @@ import { onError } from '@apollo/client/link/error';
 import { RetryLink } from '@apollo/client/link/retry';
 import fetch from 'cross-fetch';
 import { Permission } from 'src/models';
-import { UUID } from 'src/utils';
+import { User } from 'src/models';
+import { Entity, UUID } from 'src/types'; // TODO: can't use src/types <= why?
+import { stringInject } from 'src/utils';
 
-import { Entity } from '../../types'; // TODO: can't use src/types <= why?
-
+import { buildOrConditions } from './common';
 import { GET_PERMISSION } from './permission';
+import { GET_USERS_BY_IDS } from './user';
 
-type SupportedConnections = 'permissionsConnection';
+type SupportedConnections =
+  | 'permissionsConnection'
+  | 'usersConnection';
 
 export type IdNameMapper = {
   id: UUID;
@@ -145,6 +150,31 @@ export class AdminService {
       throw new Error(`Permission ${permissionName} not found`);
 
     return permission[0];
+  }
+
+  public async getUsersByIds(ids: UUID[]): Promise<User[]> {
+    const transformer = ({ id, givenName, familyName }: User) => ({
+      id,
+      givenName,
+      familyName,
+    });
+
+    const conditions = buildOrConditions(ids, 'userId');
+    const query = stringInject(GET_USERS_BY_IDS, {
+      orConditions: conditions,
+    });
+    if (query === undefined) {
+      throw new Error(`Cannot prepare Admin Service usersConnection query`);
+    }
+
+    const users = await this.traversePaginatedQuery(
+      gql(query),
+      transformer,
+      'usersConnection'
+    );
+    if (users.length === 0) throw new Error(`Users not found`);
+
+    return users;
   }
 
   /**

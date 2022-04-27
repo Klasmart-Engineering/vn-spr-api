@@ -8,7 +8,7 @@
     "lint": "eslint src --ext .ts",
     "test:prettier": "prettier \"src/**/*.ts\" --list-different",
     "start": "ts-node -r tsconfig-paths/register src/index.ts",
-    "start:dev": "concurrently \"nodemon\" \"nodemon -x tsoa spec\"",
+    "dev": "concurrently \"nodemon\" \"nodemon -x tsoa spec\"",
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
     "fmt": "npm run fix:lint && npm run fix:prettier",

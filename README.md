@@ -20,6 +20,14 @@ Start the application:
 - `npm start`
 - or, `npm run start:dev` for nodemon monitoring & live reloading
 
+### Testing
+
+For running tests with a specific file:
+
+```bash
+$ npm test -- string.test.ts
+```
+
 ### Connect to Admin Service (former User Service) on local machine
 
 **Important:** you need to have access to the repo https://github.com/KL-Engineering/user-service.
@@ -57,5 +65,7 @@ You can also run the application with its dependencies through a docker-compose.
 - `docker-compose up`
 
 ### Swagger
+
+You can check Swagger document at http://localhost:4200/docs.
 
 Swagger document is built with [tsoa](https://github.com/lukeautry/tsoa), please check its [document](https://tsoa-community.github.io/docs/) for further information.
