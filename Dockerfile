@@ -1,6 +1,6 @@
-ARG NODE_AUTH_TOKEN
-
 FROM node:16-alpine
+
+ARG NODE_AUTH_TOKEN
 
 WORKDIR /usr/app
 
