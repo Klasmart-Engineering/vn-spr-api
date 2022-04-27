@@ -1,10 +1,10 @@
 import * as express from 'express';
 import { Get, OperationId, Path, Request, Route, Tags } from 'tsoa';
 
-import { Permission } from '../models';
-import { getPermission } from '../repositories';
+import { Permission } from '../../models';
+import { getPermission } from '../../repositories';
 
-@Route('permissions')
+@Route('v1/permissions')
 @Tags('permissions')
 export default class PermissionController {
   @OperationId('getPermission')

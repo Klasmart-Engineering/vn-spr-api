@@ -1,11 +1,11 @@
 import express from 'express';
 
-import PermissionsRouter from './permissions';
 import PingRouter from './ping';
+import V1Router from './v1';
 
 const router = express.Router();
 
-router.use('/permissions', PermissionsRouter);
+router.use('/v1', V1Router);
 router.use('/ping', PingRouter);
 
 export default router;

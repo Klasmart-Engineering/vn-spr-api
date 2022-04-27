@@ -29,7 +29,7 @@ describe('GET /permissions/academic_profile_20100', () => {
 
   it('returns 200', async () => {
     const res = await requestWithSupertest
-      .get('/permissions/academic_profile_20100')
+      .get('/v1/permissions/academic_profile_20100')
       .set(
         'Authorization',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImlzc3VlciI6ImNhbG1pZC1kZWJ1ZyJ9.eyJpZCI6IjgxZDhlMWMxLWM3ZTEtNTdjZC05OGY1LTQ1NDlhOGUwYzAyNiIsImVtYWlsIjoicWErc3RyZXNzX3QxQGNhbG1pZC5jb20iLCJleHAiOjE5NDUyMDg5OTgsImlzcyI6ImNhbG1pZC1kZWJ1ZyIsImlhdCI6MTY0NTcxNjE3NH0.GuWdYRd2m79YLZZSb0vncpkLQwxGBP7ZFpGndh5k_Zo'
@@ -49,13 +49,13 @@ describe('GET /permissions/academic_profile_20100', () => {
 
   it('returns 401 when no token', async () => {
     const res = await requestWithSupertest
-      .get('/permissions/academic_profile_20100');
+      .get('/v1/permissions/academic_profile_20100');
     expect(res.status).toBe(401);
   });
 
   it('returns 401 when wrong token', async () => {
     const res = await requestWithSupertest
-      .get('/permissions/academic_profile_20100')
+      .get('/v1/permissions/academic_profile_20100')
       .set(
         'Authorization',
         'wrong token'

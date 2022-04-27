@@ -6,6 +6,18 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
+			"PingResponse": {
+				"properties": {
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"Permission": {
 				"properties": {
 					"id": {
@@ -41,18 +53,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"PingResponse": {
-				"properties": {
-					"message": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"message"
-				],
-				"type": "object",
-				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -70,7 +70,30 @@
 	},
 	"openapi": "3.0.0",
 	"paths": {
-		"/permissions/{name}": {
+		"/ping": {
+			"get": {
+				"operationId": "GetMessage",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PingResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "For health check only, this API won't need access token",
+				"tags": [
+					"ping"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/v1/permissions/{name}": {
 			"get": {
 				"operationId": "getPermission",
 				"responses": {
@@ -104,29 +127,6 @@
 						}
 					}
 				]
-			}
-		},
-		"/ping": {
-			"get": {
-				"operationId": "GetMessage",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/PingResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "For health check only, this API won't need access token",
-				"tags": [
-					"ping"
-				],
-				"security": [],
-				"parameters": []
 			}
 		}
 	},

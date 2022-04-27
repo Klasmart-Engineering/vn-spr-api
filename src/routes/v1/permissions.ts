@@ -2,7 +2,7 @@ import { ApolloError } from '@apollo/client/errors';
 import express from 'express';
 import createError from 'http-errors';
 
-import PermissionController from '../controllers/permission';
+import PermissionController from '../../controllers/v1/permission';
 
 const router = express.Router();
 
