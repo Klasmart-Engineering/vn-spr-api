@@ -6,6 +6,7 @@ ARG NODE_AUTH_TOKEN
 WORKDIR /usr/app
 
 COPY package.json tsconfig.json ./
+COPY public/swagger.json ./public/
 
 COPY src ./src
 
