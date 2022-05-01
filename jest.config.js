@@ -6,6 +6,7 @@ module.exports = {
   moduleNameMapper: {
     'src/(.*)': '<rootDir>/src/$1',
     'tests/(.*)': '<rootDir>/tests/$1',
+    '^csv-parse/sync': '<rootDir>/node_modules/csv-parse/dist/cjs/sync.cjs',
   },
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.{js,ts}'],

@@ -33,11 +33,13 @@
   "dependencies": {
     "@apollo/client": "3.5.10",
     "@kl-engineering/kidsloop-token-validation": "1.6.1",
+    "@prisma/client": "3.13.0",
     "cross-fetch": "3.1.5",
     "dotenv": "16.0.0",
     "express": "4.17.3",
     "graphql": "16.3.0",
     "joi": "17.6.0",
+    "prisma": "3.13.0",
     "swagger-ui-express": "4.3.0",
     "tsoa": "3.14.1"
   },
@@ -53,6 +55,7 @@
     "@typescript-eslint/eslint-plugin": "5.19.0",
     "@typescript-eslint/parser": "5.19.0",
     "concurrently": "7.1.0",
+    "csv-parse": "5.0.4",
     "eslint": "8.13.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-eslint-comments": "3.2.0",
@@ -73,5 +76,8 @@
   },
   "prettier": {
     "singleQuote": true
+  },
+  "prisma": {
+    "seed": "ts-node -r tsconfig-paths/register prisma/seeders/index.ts"
   }
 }

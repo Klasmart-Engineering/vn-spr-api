@@ -1,0 +1,229 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model SwitchTable {
+  datasetId   String    @unique @db.VarChar(128)    @map("dataset_id")
+  verInUse    String    @db.Char(1) @default("A")   @map("ver_in_use")
+  /// in UTC yyyy-MM-dd HH:mm:ss
+  updateAt    DateTime  @updatedAt                  @map("update_ts")
+
+  @@map("switch_table")
+}
+
+model Class {
+  orgId             String  @db.VarChar(128)    @map("org_id")
+  classId           String  @db.VarChar(128)    @map("class_id")
+  className         String  @db.VarChar(1024)   @map("class_name")
+
+  /// ";" delimited lesson plan id list. Can use sql % or mysql full text index to search/filter
+  lessonPlanIds     String?                     @map("lesson_plan_ids")
+
+  /// ";" delimited class type list (live/class/study/homework/task). Can use sql % or mysql full text index to search/filter
+  classTypes        String?  @db.VarChar(1024)  @map("class_types")
+
+  /// ";" delimited program list, for internal trouble shooting use only
+  programIds        String?                     @map("program_ids")
+
+  /// ";" delimited age range id list. Can use sql % or mysql full text index to search/filter
+  ageRangeIds       String?                     @map("age_range_ids")
+
+  /// ";" delimited age range id name list, match what's in "age_range_ids"
+  ageRangeNames     String?                     @map("age_range_names")
+
+  /// ";" delimited grade id list. Can use sql % or mysql full text index to search/filter
+  gradeIds          String?                     @map("grade_ids")
+
+  /// ";" delimited grade id name list, match what's in "grade_ids"
+  gradeNames        String?                     @map("grade_names")
+
+  /// ";" delimited subject id list. Can use sql % or mysql full text index to search/filter
+  subjectIds        String?                     @map("subject_ids")
+
+  /// ";" delimited subject id name list, match what's in "subject_ids"
+  subjectNames      String?                     @map("subject_names")
+
+  /// total number of students in the class roster
+  totalStudents     Int     @default(0)         @map("total_students")
+
+  /// number of class scheduled in last 30 days
+  scheduledClasses  Int     @default(0)         @map("scheduled_class")
+
+  /// ";" delimited student id list. Can use sql % or mysql full text index to search/filter
+  studentIds        String?                     @map("student_ids")
+
+  @@unique([orgId, classId])
+
+  @@map("reporting_spr_class_roster")
+}
+
+model Schedule {
+  orgId             String  @db.VarChar(128)    @map("org_id")
+  /// the report provide 1 year (365 days) schedule data
+  scheduleId        String  @db.VarChar(128)    @map("schedule_id")
+  classId           String  @db.VarChar(128)    @map("class_id")
+  className         String  @db.VarChar(1024)   @map("class_name")
+
+  /// possible value:  live/class/study/homework/task
+  classType         String  @db.VarChar(30)     @map("class_type")
+
+  programId         String  @db.VarChar(128)    @map("program_id")
+  lessonPlanId      String  @db.VarChar(128)    @map("lesson_plan_id")
+
+  /// epoch time UTC
+  startAt           Int     @default(0)         @map("start_at")
+  /// epoch time UTC
+  dueAt             Int     @default(0)         @map("due_at")
+
+  /// ";" delimited age range id list. Can use sql % or mysql full text index to search/filter
+  ageRangeIds       String?                     @map("age_range_ids")
+
+  /// ";" delimited age range id name list, match what's in "age_range_ids"
+  ageRangeNames     String?                     @map("age_range_names")
+
+  /// ";" delimited grade id list. Can use sql % or mysql full text index to search/filter
+  gradeIds          String?                     @map("grade_ids")
+
+  /// ";" delimited grade id name list, match what's in "grade_ids"
+  gradeNames        String?                     @map("grade_names")
+
+  /// ";" delimited subject id list. Can use sql % or mysql full text index to search/filter
+  subjectIds        String?                     @map("subject_ids")
+
+  /// ";" delimited subject id name list, match what's in "subject_ids"
+  subjectNames      String?                     @map("subject_names")
+
+  /// ";" delimited student id list. Can use sql % or mysql full text index to search/filter
+  studentIds        String?                     @map("student_ids")
+
+  /// total activities of the lesson plan id on schedule
+  totalActivities   Int     @default(0)         @map("total_activities")
+
+  @@unique([orgId, scheduleId])
+  @@index(startAt)
+  @@index(dueAt)
+
+  @@map("reporting_spr_scheduled_classes")
+}
+
+model PerformanceScore {
+  orgId             String  @db.VarChar(128)    @map("org_id")
+  /// the report provide 1 year (365 days) schedule data
+  scheduleId        String  @db.VarChar(128)    @map("schedule_id")
+  studentId         String  @db.VarChar(128)    @map("student_id")
+  classId           String  @db.VarChar(128)    @map("class_id")
+  achievedScore     Int     @default(0)         @map("achieved_score")
+  totalScore        Int     @default(0)         @map("total_score")
+  className         String  @db.VarChar(1024)   @map("class_name")
+
+  /// possible value:  live/class/study/homework/task
+  classType         String  @db.VarChar(30)     @map("class_type")
+
+  programId         String  @db.VarChar(128)    @map("program_id")
+  lessonPlanId      String  @db.VarChar(128)    @map("lesson_plan_id")
+
+  /// epoch time UTC
+  startAt           Int     @default(0)         @map("start_at")
+  /// epoch time UTC
+  dueAt             Int     @default(0)         @map("due_at")
+
+  /// ";" delimited age range id list. Can use sql % or mysql full text index to search/filter
+  ageRangeIds       String?                     @map("age_range_ids")
+
+  /// ";" delimited age range id name list, match what's in "age_range_ids"
+  ageRangeNames     String?                     @map("age_range_names")
+
+  /// ";" delimited grade id list. Can use sql % or mysql full text index to search/filter
+  gradeIds          String?                     @map("grade_ids")
+
+  /// ";" delimited grade id name list, match what's in "grade_ids"
+  gradeNames        String?                     @map("grade_names")
+
+  /// ";" delimited subject id list. Can use sql % or mysql full text index to search/filter
+  subjectIds        String?                     @map("subject_ids")
+
+  /// ";" delimited subject id name list, match what's in "subject_ids"
+  subjectNames      String?                     @map("subject_names")
+
+  category          String  @db.VarChar(128)    @map("category")
+  categoryName      String  @db.VarChar(1024)   @map("category_name")
+  subcategory       String? @db.VarChar(128)    @map("subcategory")
+  subcategoryName   String? @db.VarChar(1024)   @map("subcategory_name")
+
+  @@unique([orgId, scheduleId, studentId])
+  @@index(classId)
+  @@index(startAt)
+  @@index(dueAt)
+  @@index(category)
+  @@index(subcategory)
+
+  @@map("reporting_spr_perform_by_score")
+}
+
+model PerformanceLearningOutcome {
+  rowUuid           String  @unique @db.VarChar(128)  @map("row_uuid")
+  orgId             String  @db.VarChar(128)          @map("org_id")
+  classId           String  @db.VarChar(128)          @map("class_id")
+  /// the report provide 1 year (365 days) schedule data
+  scheduleId        String  @db.VarChar(128)          @map("schedule_id")
+  studentId         String  @db.VarChar(128)          @map("student_id")
+  learningOutcome   String  @db.VarChar(128)          @map("learning_outcome")
+
+  /// possible values: Achieved/NotAchieved/NotCovered
+  status            String  @db.VarChar(128)          @map("status")
+
+  /// possible value:  live/class/study/homework/task
+  classType         String  @db.VarChar(30)     @map("class_type")
+  className         String  @db.VarChar(1024)   @map("class_name")
+
+  programId         String  @db.VarChar(128)    @map("program_id")
+  lessonPlanId      String  @db.VarChar(128)    @map("lesson_plan_id")
+
+  /// epoch time UTC
+  startAt           Int     @default(0)         @map("start_at")
+  /// epoch time UTC
+  dueAt             Int     @default(0)         @map("due_at")
+
+  /// ";" delimited age range id list. Can use sql % or mysql full text index to search/filter
+  ageRangeIds       String?                     @map("age_range_ids")
+
+  /// ";" delimited age range id name list, match what's in "age_range_ids"
+  ageRangeNames     String?                     @map("age_range_names")
+
+  /// ";" delimited grade id list. Can use sql % or mysql full text index to search/filter
+  gradeIds          String?                     @map("grade_ids")
+
+  /// ";" delimited grade id name list, match what's in "grade_ids"
+  gradeNames        String?                     @map("grade_names")
+
+  /// ";" delimited subject id list. Can use sql % or mysql full text index to search/filter
+  subjectIds        String?                     @map("subject_ids")
+
+  /// ";" delimited subject id name list, match what's in "subject_ids"
+  subjectNames      String?                     @map("subject_names")
+
+  category          String? @db.VarChar(128)    @map("category")
+  categoryName      String? @db.VarChar(1024)   @map("category_name")
+  subcategory       String? @db.VarChar(128)    @map("subcategory")
+  subcategoryName   String? @db.VarChar(1024)   @map("subcategory_name")
+
+  @@index(orgId)
+  @@index(classId)
+  @@index(scheduleId)
+  @@index(studentId)
+  @@index(status)
+  @@index(startAt)
+  @@index(dueAt)
+  @@index(category)
+  @@index(subcategory)
+
+  @@map("reporting_spr_perform_by_lo")
+}

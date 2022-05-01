@@ -1,0 +1,32 @@
+-- CreateTable
+CREATE TABLE `reporting_spr_perform_by_score` (
+    `org_id` VARCHAR(128) NOT NULL,
+    `schedule_id` VARCHAR(128) NOT NULL,
+    `student_id` VARCHAR(128) NOT NULL,
+    `class_id` VARCHAR(128) NOT NULL,
+    `achieved_score` INTEGER NOT NULL DEFAULT 0,
+    `total_score` INTEGER NOT NULL DEFAULT 0,
+    `class_name` VARCHAR(1024) NOT NULL,
+    `class_type` VARCHAR(30) NOT NULL,
+    `program_id` VARCHAR(128) NOT NULL,
+    `lesson_plan_id` VARCHAR(128) NOT NULL,
+    `start_at` INTEGER NOT NULL DEFAULT 0,
+    `due_at` INTEGER NOT NULL DEFAULT 0,
+    `age_range_ids` VARCHAR(191) NULL,
+    `age_range_names` VARCHAR(191) NULL,
+    `grade_ids` VARCHAR(191) NULL,
+    `grade_names` VARCHAR(191) NULL,
+    `subject_ids` VARCHAR(191) NULL,
+    `subject_names` VARCHAR(191) NULL,
+    `category` VARCHAR(128) NOT NULL,
+    `category_name` VARCHAR(1024) NOT NULL,
+    `subcategory` VARCHAR(128) NULL,
+    `subcategory_name` VARCHAR(1024) NULL,
+
+    INDEX `reporting_spr_perform_by_score_class_id_idx`(`class_id`),
+    INDEX `reporting_spr_perform_by_score_start_at_idx`(`start_at`),
+    INDEX `reporting_spr_perform_by_score_due_at_idx`(`due_at`),
+    INDEX `reporting_spr_perform_by_score_category_idx`(`category`),
+    INDEX `reporting_spr_perform_by_score_subcategory_idx`(`subcategory`),
+    UNIQUE INDEX `reporting_spr_perform_by_score_org_id_schedule_id_student_id_key`(`org_id`, `schedule_id`, `student_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
