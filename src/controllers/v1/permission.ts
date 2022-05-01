@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { Get, OperationId, Path, Request, Route, Tags } from 'tsoa';
+import { Get, OperationId, Path, Request, Route, Security, Tags } from 'tsoa';
 
 import { Permission } from '../../models';
 import { getPermission } from '../../repositories';
@@ -9,6 +9,7 @@ import { getPermission } from '../../repositories';
 export default class PermissionController {
   @OperationId('getPermission')
   @Get('/:name')
+  @Security('Authorization')
   public async getPermission(
     @Path() name: string,
     @Request() request: express.Request

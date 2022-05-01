@@ -3,6 +3,19 @@
   "noImplicitAdditionalProperties": "throw-on-extras",
   "spec": {
     "outputDirectory": "public",
-    "specVersion": 3
+    "specVersion": 3,
+    "securityDefinitions": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "compilerOptions": {
+    "baseUrl": "./",
+    "path": {
+      "src/*": ["src/*"]
+    }
   }
 }

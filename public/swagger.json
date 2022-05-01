@@ -18,6 +18,257 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"Performance": {
+				"properties": {
+					"total_students": {
+						"type": "number",
+						"format": "double"
+					},
+					"average_performance": {
+						"type": "number",
+						"format": "double"
+					},
+					"today_total_classes": {
+						"type": "number",
+						"format": "double"
+					},
+					"today_activities": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"total_students",
+					"average_performance",
+					"today_total_classes",
+					"today_activities"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Class": {
+				"properties": {
+					"class_id": {
+						"type": "string"
+					},
+					"class_name": {
+						"type": "string"
+					},
+					"performance": {
+						"$ref": "#/components/schemas/Performance"
+					}
+				},
+				"required": [
+					"class_id",
+					"class_name",
+					"performance"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ClassesResponse": {
+				"properties": {
+					"total": {
+						"type": "number",
+						"format": "double"
+					},
+					"classes": {
+						"items": {
+							"$ref": "#/components/schemas/Class"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"total",
+					"classes"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PerformanceScore": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"above": {
+						"type": "number",
+						"format": "double"
+					},
+					"meets": {
+						"type": "number",
+						"format": "double"
+					},
+					"below": {
+						"type": "number",
+						"format": "double"
+					},
+					"score": {
+						"properties": {
+							"below": {
+								"type": "number",
+								"format": "double"
+							},
+							"meets": {
+								"type": "number",
+								"format": "double"
+							},
+							"above": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"below",
+							"meets",
+							"above"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"name",
+					"above",
+					"meets",
+					"below"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"UUID": {
+				"type": "string",
+				"format": "uuid",
+				"description": "Stringified UUIDv4.\nSee [RFC 4112](https://tools.ietf.org/html/rfc4122)",
+				"pattern": "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+			},
+			"Student": {
+				"properties": {
+					"student_id": {
+						"$ref": "#/components/schemas/UUID"
+					},
+					"student_name": {
+						"type": "string"
+					},
+					"avatar": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"student_id",
+					"student_name",
+					"avatar"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Group": {
+				"properties": {
+					"total": {
+						"type": "number",
+						"format": "double"
+					},
+					"students": {
+						"items": {
+							"$ref": "#/components/schemas/Student"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"total",
+					"students"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PeformanceGroupsResponse": {
+				"properties": {
+					"above": {
+						"$ref": "#/components/schemas/Group"
+					},
+					"meets": {
+						"$ref": "#/components/schemas/Group"
+					},
+					"below": {
+						"$ref": "#/components/schemas/Group"
+					}
+				},
+				"required": [
+					"above",
+					"meets",
+					"below"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SkillScore": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"achieved": {
+						"type": "number",
+						"format": "double"
+					},
+					"notAchieved": {
+						"type": "number",
+						"format": "double"
+					},
+					"total": {
+						"type": "number",
+						"format": "double"
+					},
+					"score": {
+						"properties": {
+							"total": {
+								"type": "number",
+								"format": "double"
+							},
+							"notAchieved": {
+								"type": "number",
+								"format": "double"
+							},
+							"achieved": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"total",
+							"notAchieved",
+							"achieved"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"name",
+					"achieved",
+					"notAchieved",
+					"total"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SkillScoresReport": {
+				"properties": {
+					"date": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/SkillScore"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"date",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"Permission": {
 				"properties": {
 					"id": {
@@ -55,7 +306,13 @@
 				"additionalProperties": false
 			}
 		},
-		"securitySchemes": {}
+		"securitySchemes": {
+			"Authorization": {
+				"type": "apiKey",
+				"name": "Authorization",
+				"in": "header"
+			}
+		}
 	},
 	"info": {
 		"title": "vn-spr-api",
@@ -93,6 +350,127 @@
 				"parameters": []
 			}
 		},
+		"/v1/classes": {
+			"get": {
+				"operationId": "GetClasses",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClassesResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"classes"
+				],
+				"security": [
+					{
+						"Authorization": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/v1/performances": {
+			"get": {
+				"operationId": "GetPerformanceScores",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/PerformanceScore"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"performances"
+				],
+				"security": [
+					{
+						"Authorization": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "timeZoneOffset",
+						"required": false,
+						"schema": {
+							"default": 0,
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/v1/performances/groups": {
+			"get": {
+				"operationId": "GetPerformanceGroups",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PeformanceGroupsResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"performances"
+				],
+				"security": [
+					{
+						"Authorization": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/v1/performances/skills": {
+			"get": {
+				"operationId": "GetSkillScores",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/SkillScoresReport"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"performances"
+				],
+				"security": [
+					{
+						"Authorization": []
+					}
+				],
+				"parameters": []
+			}
+		},
 		"/v1/permissions/{name}": {
 			"get": {
 				"operationId": "getPermission",
@@ -116,7 +494,11 @@
 				"tags": [
 					"permissions"
 				],
-				"security": [],
+				"security": [
+					{
+						"Authorization": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
