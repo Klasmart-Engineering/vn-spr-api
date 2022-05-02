@@ -7,6 +7,7 @@ WORKDIR /usr/app
 
 COPY package.json tsconfig.json ./
 COPY public/swagger.json ./public/
+COPY prisma ./prisma
 
 COPY src ./src
 

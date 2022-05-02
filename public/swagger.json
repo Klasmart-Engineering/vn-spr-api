@@ -352,7 +352,7 @@
 		},
 		"/v1/classes": {
 			"get": {
-				"operationId": "GetClasses",
+				"operationId": "getClasses",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -378,7 +378,7 @@
 		},
 		"/v1/performances": {
 			"get": {
-				"operationId": "GetPerformanceScores",
+				"operationId": "getPerformanceScores",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -418,7 +418,7 @@
 		},
 		"/v1/performances/groups": {
 			"get": {
-				"operationId": "GetPerformanceGroups",
+				"operationId": "getPerformanceGroups",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -444,7 +444,7 @@
 		},
 		"/v1/performances/skills": {
 			"get": {
-				"operationId": "GetSkillScores",
+				"operationId": "getPerformanceSkills",
 				"responses": {
 					"200": {
 						"description": "Ok",
