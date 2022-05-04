@@ -1,5 +1,11 @@
+import cors, { CorsOptionsDelegate } from 'cors';
 import { config } from 'dotenv';
-import express, { NextFunction, Request, RequestHandler, Response } from 'express';
+import express, {
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+} from 'express';
 import createError, { HttpError } from 'http-errors';
 import swaggerUi from 'swagger-ui-express';
 
@@ -32,9 +38,31 @@ const unless = (middleware: RequestHandler, ...paths: string[]) => {
   };
 };
 
-// Middleware
-app.use(unless(checkToken, '/ping'));
+const whitelistDomains = process.env.WHITELIST_DOMAINS
+  ? process.env.WHITELIST_DOMAINS.split(',')
+  : [];
 
+const corsOptionsDelegate: CorsOptionsDelegate<Request> = (req, callback) => {
+  let allowOrigin = false;
+
+  if (whitelistDomains.length > 0) {
+    const whitelistRegex = new RegExp(
+      `(http://|https://)(${whitelistDomains
+        .join('|')
+        .replaceAll('*.', '(([a-z]+.)+|)')})`
+    );
+
+    allowOrigin = whitelistRegex.test(req.header('Origin') ?? '');
+  }
+
+  const corsOptions = { origin: allowOrigin };
+
+  callback(null, corsOptions);
+};
+
+// Middleware
+app.use(unless(cors(corsOptionsDelegate), '/ping'));
+app.use(unless(checkToken, '/ping'));
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
