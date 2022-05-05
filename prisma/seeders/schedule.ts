@@ -25,14 +25,18 @@ export async function scheduleSeeder(prismaClient: PrismaClient) {
         }
       },
     }
-  ) as Prisma.ScheduleCreateInput[] | undefined;
+  ) as Prisma.ScheduleACreateInput[] | undefined;
 
   if (typeof schedules === 'undefined' || !schedules) {
     return;
   }
 
-  await prismaClient.schedule.createMany({
+  await prismaClient.scheduleA.createMany({
     data: schedules,
+    skipDuplicates: true,
+  });
+  await prismaClient.scheduleB.createMany({
+    data: schedules as Prisma.ScheduleBCreateInput[],
     skipDuplicates: true,
   });
 }

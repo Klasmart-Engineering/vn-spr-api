@@ -23,14 +23,18 @@ export async function performanceScoreSeeder(prismaClient: PrismaClient) {
           return value;
       }
     },
-  }) as Prisma.PerformanceScoreCreateInput[] | undefined;
+  }) as Prisma.PerformanceScoreACreateInput[] | undefined;
 
   if (typeof score === 'undefined' || !score) {
     return;
   }
 
-  await prismaClient.performanceScore.createMany({
+  await prismaClient.performanceScoreA.createMany({
     data: score,
+    skipDuplicates: true,
+  });
+  await prismaClient.performanceScoreB.createMany({
+    data: score as Prisma.PerformanceScoreBCreateInput[],
     skipDuplicates: true,
   });
 }

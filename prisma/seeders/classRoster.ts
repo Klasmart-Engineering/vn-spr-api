@@ -21,14 +21,18 @@ export async function classRosterSeeder(prismaClient: PrismaClient) {
           return value;
       }
     },
-  }) as Prisma.ClassCreateInput | undefined;
+  }) as Prisma.ClassACreateInput[] | undefined;
 
   if (typeof classes === 'undefined' || !classes) {
     return;
   }
 
-  await prismaClient.class.createMany({
+  await prismaClient.classA.createMany({
     data: classes,
+    skipDuplicates: true,
+  });
+  await prismaClient.classB.createMany({
+    data: classes as Prisma.ClassBCreateInput[],
     skipDuplicates: true,
   });
 }

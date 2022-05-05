@@ -4,21 +4,39 @@
 
 ## Installation
 
+Install MySQL:
+
+```bash
+$ docker run -d --name=mysql -p 3306:3306 -e MYSQL_PASSWORD=kidsloop mysql
+```
+
 Setup environment variables:
 
 - Create a `.env` file by copying the contents of `.env.example`
 - Change the value of `SHOW_SWAGGER` to `true` if you want to see Swagger document on your local machine.
 
+Authenticate with the kidsloop private npm registry:
+
+- See instructions [here](https://calmisland.atlassian.net/wiki/spaces/ED/pages/2537193585/GH+Storing+libraries+and+containers+in+Github+Packages#Getting-access)
+
 Install dependencies:
 
-- `npm i`
+```bash
+$ npm i
+```
 
 ## Running
+
+Start MySQL:
+
+```bash
+$ docker start mysql
+```
 
 Start the application:
 
 - `npm start`
-- or, `npm run start:dev` for nodemon monitoring & live reloading
+- or, `npm run dev` for nodemon monitoring & live reloading
 
 ### Connect to Admin Service (former User Service) on local machine
 
@@ -88,6 +106,12 @@ $ npx prisma db seed
 ```
 
 ### Testing
+
+Make sure the `mysql` docker container is running, if you are not using the `docker-compose`.
+
+```bash
+$ docker container exec -it mysql mysql -u root -c "create database spr_test;"
+```
 
 For running tests with a specific file:
 

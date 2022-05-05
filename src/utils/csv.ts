@@ -8,10 +8,14 @@ export function readCsv(
   filePath: string,
   options?: Options
 ):
-  | Prisma.ClassCreateInput[]
-  | Prisma.ScheduleCreateInput[]
-  | Prisma.PerformanceScoreCreateInput[]
-  | Prisma.PerformanceLearningOutcomeCreateInput[]
+  | Prisma.ClassACreateInput[]
+  | Prisma.ClassBCreateInput[]
+  | Prisma.ScheduleACreateInput[]
+  | Prisma.ScheduleBCreateInput[]
+  | Prisma.PerformanceScoreACreateInput[]
+  | Prisma.PerformanceScoreBCreateInput[]
+  | Prisma.PerformanceLearningOutcomeACreateInput[]
+  | Prisma.PerformanceLearningOutcomeBCreateInput[]
   | undefined {
   if (!fs.existsSync(filePath)) {
     /* eslint-disable-next-line no-console */

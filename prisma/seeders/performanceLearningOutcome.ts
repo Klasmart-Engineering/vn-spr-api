@@ -26,14 +26,18 @@ export async function performanceLearningOutcomeSeeder(
         }
       },
     }
-  ) as Prisma.PerformanceLearningOutcomeCreateInput[] | undefined;
+  ) as Prisma.PerformanceLearningOutcomeACreateInput[] | undefined;
 
   if (typeof learningOutcomes === 'undefined' || !learningOutcomes) {
     return;
   }
 
-  await prismaClient.performanceLearningOutcome.createMany({
+  await prismaClient.performanceLearningOutcomeA.createMany({
     data: learningOutcomes,
+    skipDuplicates: true,
+  });
+  await prismaClient.performanceLearningOutcomeB.createMany({
+    data: learningOutcomes as Prisma.PerformanceLearningOutcomeBCreateInput[],
     skipDuplicates: true,
   });
 }

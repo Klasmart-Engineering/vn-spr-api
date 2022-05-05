@@ -12,3 +12,14 @@ services:
       - '4200'
     ports:
       - '4200:4200'
+    depends_on:
+      - mysql
+  mysql:
+    container_name: mysql
+    image: mysql:5.7
+    restart: always
+    environment:
+      - MYSQL_DB=spr_api
+      - MYSQL_PASSWORD=kidsloop
+    ports:
+      - 3306:3306
