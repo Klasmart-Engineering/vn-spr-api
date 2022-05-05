@@ -17,21 +17,23 @@ for (const k in envConfig) {
 const requestWithSupertest = supertest(app);
 
 describe('GET /v1/classes', () => {
-  it('Should have Access-Control-Allow-Origin', async () => {
+  it('has Access-Control-Allow-Origin', async () => {
     const res = await requestWithSupertest
       .get('/v1/classes')
       .set('Origin', 'http://alpha.kidsloop.net');
 
+    console.log(res.headers);
     expect(res.headers['access-control-allow-origin']).toBe(
       'http://alpha.kidsloop.net'
     );
   });
 
-  it('Should not have Access-Control-Allow-Origin', async () => {
+  it('does not have Access-Control-Allow-Origin', async () => {
     const res = await requestWithSupertest
       .get('/v1/classes')
       .set('Origin', 'http://not-allow-origin.com');
 
+    console.log(res.headers);
     expect(res.headers['access-control-allow-origin']).toBeUndefined();
   });
 });
