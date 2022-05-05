@@ -21,7 +21,7 @@ describe('GET /v1/classes', () => {
     const res = await requestWithSupertest
       .get('/v1/classes')
       .set('Origin', 'http://alpha.kidsloop.net');
-
+    console.log(process.env.WHITELIST_DOMAINS);
     console.log(res.headers);
     expect(res.headers['access-control-allow-origin']).toBe(
       'http://alpha.kidsloop.net'

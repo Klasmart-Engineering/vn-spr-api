@@ -12,8 +12,8 @@ import swaggerUi from 'swagger-ui-express';
 import { checkToken } from './middlewares/auth';
 import indexRouter from './routes';
 
-const app = express();
 config();
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -37,7 +37,8 @@ const unless = (middleware: RequestHandler, ...paths: string[]) => {
     pathCheck ? next() : middleware(req, res, next);
   };
 };
-
+/* eslint-disable-next-line no-console */
+console.log(process.env.WHITELIST_DOMAINS);
 const whitelistDomains = process.env.WHITELIST_DOMAINS
   ? process.env.WHITELIST_DOMAINS.split(',')
   : [];
@@ -51,10 +52,12 @@ const corsOptionsDelegate: CorsOptionsDelegate<Request> = (req, callback) => {
         .join('|')
         .replaceAll('*.', '(([a-z]+.)+|)')})`
     );
-
+    /* eslint-disable-next-line no-console */
+    console.log(req.header('Origin'));
     allowOrigin = whitelistRegex.test(req.header('Origin') ?? '');
   }
-
+  /* eslint-disable-next-line no-console */
+  console.log(allowOrigin);
   const corsOptions = { origin: allowOrigin };
 
   callback(null, corsOptions);
