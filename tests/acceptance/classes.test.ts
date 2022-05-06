@@ -17,7 +17,7 @@ for (const k in envConfig) {
 const requestWithSupertest = supertest(app);
 
 describe('GET /v1/classes', () => {
-  it('returns 200', async () => {
+  xit('returns 200', async () => {
     const res = await requestWithSupertest
       .get('/v1/classes')
       .set(

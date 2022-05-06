@@ -18,7 +18,13 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Performance": {
+			"UUID": {
+				"type": "string",
+				"format": "uuid",
+				"description": "Stringified UUIDv4.\nSee [RFC 4112](https://tools.ietf.org/html/rfc4122)",
+				"pattern": "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+			},
+			"PerformanceData": {
 				"properties": {
 					"total_students": {
 						"type": "number",
@@ -46,16 +52,16 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Class": {
+			"ClassData": {
 				"properties": {
 					"class_id": {
-						"type": "string"
+						"$ref": "#/components/schemas/UUID"
 					},
 					"class_name": {
 						"type": "string"
 					},
 					"performance": {
-						"$ref": "#/components/schemas/Performance"
+						"$ref": "#/components/schemas/PerformanceData"
 					}
 				},
 				"required": [
@@ -74,7 +80,7 @@
 					},
 					"classes": {
 						"items": {
-							"$ref": "#/components/schemas/Class"
+							"$ref": "#/components/schemas/ClassData"
 						},
 						"type": "array"
 					}
@@ -134,12 +140,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"UUID": {
-				"type": "string",
-				"format": "uuid",
-				"description": "Stringified UUIDv4.\nSee [RFC 4112](https://tools.ietf.org/html/rfc4122)",
-				"pattern": "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
 			},
 			"Student": {
 				"properties": {
@@ -316,7 +316,7 @@
 	},
 	"info": {
 		"title": "vn-spr-api",
-		"version": "1.0.0",
+		"version": "1.1.0",
 		"description": "(VN) Student Performance Report API",
 		"license": {
 			"name": "ISC"
@@ -373,7 +373,35 @@
 						"Authorization": []
 					}
 				],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "query",
+						"name": "orgId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/UUID"
+						}
+					},
+					{
+						"in": "query",
+						"name": "date",
+						"required": false,
+						"schema": {
+							"default": "",
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "timeZoneOffset",
+						"required": false,
+						"schema": {
+							"default": 0,
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
 			}
 		},
 		"/v1/performances": {

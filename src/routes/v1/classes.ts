@@ -1,13 +1,27 @@
 import express from 'express';
+import createError from 'http-errors';
 import ClassController from 'src/controllers/v1/class';
+import { catchAsync } from 'src/utils';
+import { getClassesSchema } from 'src/validations/requests';
 
 const router = express.Router();
 
-router.get('/', async (_, res) => {
-  const classController = new ClassController();
-  const response = await classController.getClasses();
+router.get(
+  '/',
+  catchAsync(async (req, res) => {
+    const classController = new ClassController();
+    const { error, value } = getClassesSchema.validate(req.query);
+    if (error) {
+      throw createError(400, { message: error });
+    }
+    const response = await classController.getClasses(
+      value.orgId,
+      value.date,
+      value.timeZoneOffset,
+    );
 
-  return res.status(200).json(response);
-});
+    return res.status(200).json(response);
+  })
+);
 
 export default router;

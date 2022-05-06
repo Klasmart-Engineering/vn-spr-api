@@ -13,7 +13,10 @@
     "fix:lint": "eslint src --ext .ts --fix",
     "fmt": "npm run fix:lint && npm run fix:prettier",
     "commitlint-check": "commitlint",
-    "swagger": "tsoa spec"
+    "swagger": "tsoa spec",
+    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "prisma:migrate": "npx prisma migrate dev",
+    "prisma:seed": "npx prisma db seed"
   },
   "repository": {
     "type": "git",
@@ -32,6 +35,7 @@
   "license": "ISC",
   "dependencies": {
     "@apollo/client": "3.5.10",
+    "@joi/date": "2.1.0",
     "@kl-engineering/kidsloop-token-validation": "1.6.1",
     "@prisma/client": "3.13.0",
     "cross-fetch": "3.1.5",
