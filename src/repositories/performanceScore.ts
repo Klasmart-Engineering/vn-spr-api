@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { PerformanceScore } from 'src/models/performance';
+<<<<<<< HEAD
 import { Days, GroupType, ReportEntity, UUID } from 'src/types';
+=======
+import { ReportEntity, UUID } from 'src/types';
+>>>>>>> 23984ad (feat: student overall performance)
 import { getVerInUse } from 'src/utils/database';
 import { dateDiff, plusDate, subtractDate } from 'src/utils/date';
 import { toFixedNumber } from 'src/utils/number';
@@ -101,7 +105,11 @@ export const getScores = async (
         : {}),
       ...(viewLOs
         ? {
+<<<<<<< HEAD
             learningOutcome: {
+=======
+            score: {
+>>>>>>> 23984ad (feat: student overall performance)
               ...(groupLO === 'all' || groupLO === 'above'
                 ? {
                     above: averageSPLOfGroupByDay(
