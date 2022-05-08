@@ -384,7 +384,7 @@
 					},
 					{
 						"in": "query",
-						"name": "date",
+						"name": "selectedDay",
 						"required": false,
 						"schema": {
 							"default": "",
@@ -431,6 +431,32 @@
 					}
 				],
 				"parameters": [
+					{
+						"in": "query",
+						"name": "classId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/UUID"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fromDay",
+						"required": false,
+						"schema": {
+							"default": "",
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "toDay",
+						"required": false,
+						"schema": {
+							"default": "",
+							"type": "string"
+						}
+					},
 					{
 						"in": "query",
 						"name": "timeZoneOffset",

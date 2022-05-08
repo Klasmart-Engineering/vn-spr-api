@@ -1,42 +1,39 @@
-import { PrismaClient, ScheduleA } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { UUID } from 'src/types';
 
+const tableName = 'reporting_spr_scheduled_classes_A';
 export default class ScheduleRepository {
   prisma = new PrismaClient();
 
-  async getSchedulesByDate({
+  async getSchedulesOfDay({
     orgId,
-    scheduleId,
-    classId,
-    date,
+    selectedDay,
+    timezoneInSeconds,
   }: {
-    orgId?: UUID;
-    scheduleId?: UUID;
-    classId?: UUID;
-    date: Date;
-  }): Promise<ScheduleA[]> {
-    const beginTimestamp = (date.setHours(0, 0, 0, 0) / 1000) | 0;
-    const endTimestamp = (date.setHours(23, 59, 59, 59) / 1000) | 0;
-    return await this.prisma.scheduleA.findMany({
-      where: {
-        ...(orgId ? { orgId } : {}),
-        ...(scheduleId ? { scheduleId } : {}),
-        ...(classId ? { classId } : {}),
-        OR: [
-          {
-            startAt: {
-              gte: beginTimestamp,
-              lte: endTimestamp,
-            },
-          },
-          {
-            dueAt: {
-              gte: beginTimestamp,
-              lte: endTimestamp,
-            },
-          },
-        ],
-      },
-    });
+    orgId: UUID;
+    selectedDay: string;
+    timezoneInSeconds: number;
+  }): Promise<
+    Array<{ scheduleId: UUID; classId: UUID; totalActivities: number }>
+  > {
+    const sql = `
+    SELECT
+      schedule_id AS scheduleId,
+      class_id AS classId,
+      total_activities AS totalActivities
+    FROM
+      ${tableName}
+    WHERE
+      org_id = '${orgId}'
+    AND
+      (
+        DATE_FORMAT('${selectedDay}', '%Y-%m-%d') = DATE_FORMAT(FROM_UNIXTIME(start_at + ${timezoneInSeconds}), '%Y-%m-%d') OR
+        DATE_FORMAT('${selectedDay}', '%Y-%m-%d') = DATE_FORMAT(FROM_UNIXTIME(due_at + ${timezoneInSeconds}), '%Y-%m-%d')
+      );
+    `;
+    const schedules = await this.prisma.$queryRawUnsafe(`${sql}`);
+    if (!Array.isArray(schedules))
+      throw new Error('Failed to get students score');
+    return schedules;
   }
 }

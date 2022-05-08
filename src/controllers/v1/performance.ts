@@ -3,6 +3,9 @@ import random from 'random';
 import { Group } from 'src/models/group';
 import { PerformanceScore, SkillScore } from 'src/models/performance';
 import { Student } from 'src/models/student';
+import PerformanceScoreRepository from 'src/repositories/performanceScore';
+import { UUID } from 'src/types';
+import { dateDiff, plusDate } from 'src/utils/date';
 import { Get, OperationId, Query, Route, Security, Tags } from 'tsoa';
 
 export interface PeformanceGroupsResponse {
@@ -23,27 +26,66 @@ export default class PerformanceController {
   @Get('/')
   @Security('Authorization')
   public async getPerformanceScores(
+    @Query() classId: UUID,
+    @Query() fromDay = '',
+    @Query() toDay = '',
     @Query() timeZoneOffset = 0
   ): Promise<Array<PerformanceScore>> {
+    const defaultDays = 7;
+    const fromDate = fromDay
+      ? new Date(Date.parse(fromDay))
+      : new Date(
+          Date.now() - (defaultDays * 3600 * 24 + timeZoneOffset) * 1000
+        );
+    const toDate = toDay
+      ? new Date(Date.parse(toDay))
+      : new Date(Date.now() + timeZoneOffset * 1000);
+    const performanceScoreRepository = new PerformanceScoreRepository();
+
+    const studentsScore =
+      await performanceScoreRepository.getStudentScoresOfClassInPeriod({
+        classId: classId,
+        fromDay: fromDate.toISOString().split('T')[0],
+        toDay: toDate.toISOString().split('T')[0],
+        timezoneInSeconds: timeZoneOffset,
+      });
+
     const performanceScores: Array<PerformanceScore> = [];
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i <= dateDiff(fromDate, toDate); i++) {
+      const date = plusDate(fromDate, i);
+      const dayName = date.toISOString().split('T')[0];
+
+      const aboveStudentsScore = studentsScore.filter(
+        (score) => score.day === dayName && score.sps >= 75
+      );
+      const meetsStudentsScore = studentsScore.filter(
+        (score) => score.day === dayName && score.sps >= 50 && score.sps < 75
+      );
+      const belowStudentsScore = studentsScore.filter(
+        (score) => score.day === dayName && score.sps < 50
+      );
+
       performanceScores.push({
-        name: new Date(faker.date.past().getTime() + timeZoneOffset * 1000)
-          .toISOString()
-          .split('T')[0],
-        above: random.int(1, 100),
-        meets: random.int(1, 100),
-        below: random.int(1, 100),
-        ...(random.boolean()
-          ? {
-              score: {
-                above: random.int(1, 100),
-                meets: random.int(1, 100),
-                below: random.int(1, 100),
-              },
-            }
-          : {}),
+        name: dayName,
+        above:
+          (aboveStudentsScore
+            .map((score) => score.sps)
+            .reduce((score1, score2) => score1 + score2, 0) /
+            aboveStudentsScore.length) |
+          0,
+        meets:
+          (meetsStudentsScore
+            .map((score) => score.sps)
+            .reduce((score1, score2) => score1 + score2, 0) /
+            meetsStudentsScore.length) |
+          0,
+        below:
+          (belowStudentsScore
+            .map((score) => score.sps)
+            .reduce((score1, score2) => score1 + score2, 0) /
+            belowStudentsScore.length) |
+          0,
       });
     }
 

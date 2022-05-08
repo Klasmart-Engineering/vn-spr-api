@@ -16,7 +16,7 @@ router.get(
     }
     const response = await classController.getClasses(
       value.orgId,
-      value.date,
+      value.selectedDay,
       value.timeZoneOffset,
     );
 

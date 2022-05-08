@@ -1,77 +1,81 @@
 import { PrismaClient } from '@prisma/client';
 import { UUID } from 'src/types';
 
-export interface StudentPerfromanceScore {
-  classId: UUID;
-  studentId: UUID;
-  achievedScore: number;
-  totalScore: number;
-  performanceScore: number;
-}
-
+const tableName = 'reporting_spr_perform_by_score_A';
 export default class PerformanceScoreRepository {
   prisma = new PrismaClient();
 
-  public async getPerformanceScoreOfStudentsByDate({
+  public async getStudentsScoreOfDay({
     orgId,
-    scheduleId,
-    classId,
-    date,
+    selectedDay,
+    timezoneInSeconds,
   }: {
-    orgId?: UUID;
-    scheduleId?: UUID;
-    classId?: UUID;
-    date: Date;
-  }): Promise<Array<StudentPerfromanceScore>> {
-    const beginTimestamp = (date.setHours(0, 0, 0, 0) / 1000) | 0;
-    const endTimestamp = (date.setHours(23, 59, 59, 59) / 1000) | 0;
+    orgId: UUID;
+    selectedDay: string;
+    timezoneInSeconds: number;
+  }): Promise<
+    Array<{ classId: UUID; studentId: UUID; sps: number; day: string }>
+  > {
+    const sql = `
+    SELECT
+      class_id AS classId,
+      student_id AS studentId,
+      (SUM(achieved_score) * 100 / SUM(total_score)) AS sps,
+      CASE WHEN start_at = 0 THEN
+        DATE_FORMAT(FROM_UNIXTIME(due_at + ${timezoneInSeconds}), '%Y-%m-%d')
+      ELSE
+        DATE_FORMAT(FROM_UNIXTIME(start_at + ${timezoneInSeconds}), '%Y-%m-%d')
+      END AS day
+    FROM
+      ${tableName}
+    WHERE
+      org_id = '${orgId}'
+    GROUP BY classId, studentId, day
+    HAVING
+      day = DATE_FORMAT('${selectedDay}', '%Y-%m-%d')
+    ORDER BY day DESC;
+    `;
 
-    const performanceScores = await this.prisma.performanceScoreA.groupBy({
-      by: ['studentId', 'classId'],
-      _sum: {
-        achievedScore: true,
-        totalScore: true,
-      },
-      where: {
-        ...(orgId ? { orgId } : {}),
-        ...(scheduleId ? { scheduleId } : {}),
-        ...(classId ? { classId } : {}),
-        OR: [
-          {
-            startAt: {
-              gte: beginTimestamp,
-              lte: endTimestamp,
-            },
-          },
-          {
-            dueAt: {
-              gte: beginTimestamp,
-              lte: endTimestamp,
-            },
-          },
-        ],
-      },
-    });
+    const studentsScore = await this.prisma.$queryRawUnsafe(`${sql}`);
+    if (!Array.isArray(studentsScore))
+      throw new Error('Failed to get students score');
+    return studentsScore;
+  }
 
-    const studentPerformanceScores: Array<StudentPerfromanceScore> = [];
-    for (let i = 0; i < performanceScores.length; i++) {
-      const performanceScore = performanceScores[i];
-      if (
-        !performanceScore._sum.achievedScore ||
-        !performanceScore._sum.totalScore
-      )
-        continue;
-      const studentPerformanceScore =
-        (performanceScore._sum.achievedScore * 100) /
-        performanceScore._sum.totalScore;
-      studentPerformanceScores.push({
-        classId: performanceScore.classId,
-        studentId: performanceScore.studentId,
-        achievedScore: performanceScore._sum.achievedScore,
-        totalScore: performanceScore._sum.totalScore,
-        performanceScore: studentPerformanceScore,
-      });
-    }
-    return studentPerformanceScores;
+  public async getStudentScoresOfClassInPeriod({
+    classId,
+    fromDay,
+    toDay,
+    timezoneInSeconds,
+  }: {
+    classId: UUID;
+    fromDay: string;
+    toDay: string;
+    timezoneInSeconds: number;
+  }): Promise<Array<{ studentId: UUID; sps: number; day: string }>> {
+    const sql = `
+    SELECT
+      student_id AS studentId,
+      (SUM(achieved_score) * 100 / SUM(total_score)) AS sps,
+      CASE WHEN start_at = 0 THEN
+        DATE_FORMAT(FROM_UNIXTIME(due_at + ${timezoneInSeconds}), '%Y-%m-%d')
+      ELSE
+        DATE_FORMAT(FROM_UNIXTIME(start_at + ${timezoneInSeconds}), '%Y-%m-%d')
+      END AS day
+    FROM
+      ${tableName}
+    WHERE
+      class_id = '${classId}'
+    GROUP BY studentId, day
+    HAVING
+      day >= DATE_FORMAT('${fromDay}', '%Y-%m-%d') AND
+      day <= DATE_FORMAT('${toDay}', '%Y-%m-%d')
+    ORDER BY day DESC;
+    `;
+
+    const studentsScore = await this.prisma.$queryRawUnsafe(`${sql}`);
+    if (!Array.isArray(studentsScore))
+      throw new Error('Failed to get students score');
+    return studentsScore;
   }
 }
