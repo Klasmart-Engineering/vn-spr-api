@@ -6,4 +6,6 @@
  */
 export type UUID = string;
 
+export type Days = 7 | 30 | 365;
+
 export * from './entity';

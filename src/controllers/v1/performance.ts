@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker';
 import * as express from 'express';
 import random from 'random';
-import { Group } from 'src/models/group';
+import { Category, Group } from 'src/models';
 import { PerformanceScore, SkillScore } from 'src/models/performance';
 import { getGroups } from 'src/repositories';
-import { UUID } from 'src/types';
+import { getCategories } from 'src/repositories/category';
+import { Days, UUID } from 'src/types';
 import {
   BadRequestErrorJSON,
   InternalServerErrorJSON,
@@ -30,6 +31,11 @@ export interface PerformanceGroupsResponse {
 export interface SkillScoresReport {
   date: string;
   data: Array<SkillScore>;
+}
+
+interface CategoriesResponse {
+  total: number;
+  categories: Category[];
 }
 
 @Route('v1/performances')
@@ -80,6 +86,25 @@ export default class PerformanceController {
     const token = request.get('Authorization') as string;
 
     return await getGroups(classId, timezone, token);
+  }
+
+  @OperationId('getPerformanceCategories')
+  @Get('/categories')
+  @Security('Authorization')
+  @Response<BadRequestErrorJSON>(400, 'bad request')
+  @Response<UnauthorizedErrorJSON>(401, 'unauthorized')
+  @Response<InternalServerErrorJSON>(500, 'internal server error')
+  public async getPerformanceCategories(
+    @Query() classId: UUID,
+    @Query() timezone: number,
+    @Query() days: Days
+  ): Promise<CategoriesResponse> {
+    const categories = await getCategories(classId, timezone, days);
+
+    return {
+      total: categories.length,
+      categories: categories,
+    };
   }
 
   @OperationId('getPerformanceSkills')

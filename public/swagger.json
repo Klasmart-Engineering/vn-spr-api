@@ -252,6 +252,50 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"Category": {
+				"properties": {
+					"id": {
+						"$ref": "#/components/schemas/UUID"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"name"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CategoriesResponse": {
+				"properties": {
+					"total": {
+						"type": "number",
+						"format": "double"
+					},
+					"categories": {
+						"items": {
+							"$ref": "#/components/schemas/Category"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"total",
+					"categories"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Days": {
+				"type": "number",
+				"enum": [
+					7,
+					30,
+					365
+				]
+			},
 			"SkillScore": {
 				"properties": {
 					"name": {
@@ -536,6 +580,88 @@
 						"schema": {
 							"format": "double",
 							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/v1/performances/categories": {
+			"get": {
+				"operationId": "getPerformanceCategories",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/CategoriesResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "bad request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/BadRequestErrorJSON"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorJSON"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorJSON"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"performances"
+				],
+				"security": [
+					{
+						"Authorization": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "classId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/UUID"
+						}
+					},
+					{
+						"in": "query",
+						"name": "timezone",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "days",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/Days"
 						}
 					}
 				]
