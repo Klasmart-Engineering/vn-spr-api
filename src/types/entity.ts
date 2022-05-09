@@ -8,3 +8,10 @@ export enum Entity {
   PERMISSION = 'Permission',
   UNKNOWN = 'Unknown',
 }
+
+export enum ReportEntity {
+  CLASS = 'Class',
+  SCHEDULE = 'Schedule',
+  PERFORMANCE_SCORE = 'PerformanceScore',
+  PERFORMANCE_LEARNING_OUTCOME = 'PerformanceLearningOutcome',
+}

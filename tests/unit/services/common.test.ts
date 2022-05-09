@@ -35,7 +35,7 @@ describe('#buildOrConditions', () => {
       direction: FORWARD
       directionArgs: { count: $count, cursor: $cursor }
       filter: {
-        status: { operator: eq, value: "active" }
+        userStatus: { operator: eq, value: "active" }
         OR: [{ userId: { operator: eq, value: "10f60763-c32b-4d48-9777-a0c1d28f6e85" } },{ userId: { operator: eq, value: "5abd2d6e-fa9f-4026-a9c1-b6b47e557019" } }]
       }
     ) {

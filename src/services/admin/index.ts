@@ -153,10 +153,11 @@ export class AdminService {
   }
 
   public async getUsersByIds(ids: UUID[]): Promise<User[]> {
-    const transformer = ({ id, givenName, familyName }: User) => ({
+    const transformer = ({ id, givenName, familyName, avatar }: User) => ({
       id,
       givenName,
       familyName,
+      avatar,
     });
 
     const conditions = buildOrConditions(ids, 'userId');

@@ -181,7 +181,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"PeformanceGroupsResponse": {
+			"PerformanceGroupsResponse": {
 				"properties": {
 					"above": {
 						"$ref": "#/components/schemas/Group"
@@ -197,6 +197,57 @@
 					"above",
 					"meets",
 					"below"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"BadRequestErrorJSON": {
+				"properties": {
+					"message": {
+						"type": "string",
+						"enum": [
+							"bad request"
+						],
+						"nullable": false
+					},
+					"errors": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"message",
+					"errors"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"UnauthorizedErrorJSON": {
+				"properties": {
+					"message": {
+						"type": "string",
+						"enum": [
+							"unauthorized"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"InternalServerErrorJSON": {
+				"properties": {
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"message"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -316,7 +367,7 @@
 	},
 	"info": {
 		"title": "vn-spr-api",
-		"version": "1.0.0",
+		"version": "1.1.0",
 		"description": "(VN) Student Performance Report API",
 		"license": {
 			"name": "ISC"
@@ -425,7 +476,37 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/PeformanceGroupsResponse"
+									"$ref": "#/components/schemas/PerformanceGroupsResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "bad request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/BadRequestErrorJSON"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorJSON"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorJSON"
 								}
 							}
 						}
@@ -439,7 +520,25 @@
 						"Authorization": []
 					}
 				],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "query",
+						"name": "classId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/UUID"
+						}
+					},
+					{
+						"in": "query",
+						"name": "timezone",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
 			}
 		},
 		"/v1/performances/skills": {

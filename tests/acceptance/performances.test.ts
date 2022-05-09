@@ -18,7 +18,7 @@ const requestWithSupertest = supertest(app);
 
 describe('Performances', () => {
   describe('GET /v1/performances', () => {
-    it('returns 200 when no timeZoneOffset param', async () => {
+    xit('returns 200 when no timeZoneOffset param', async () => {
       const res = await requestWithSupertest
         .get('/v1/performances')
         .set(
@@ -30,7 +30,7 @@ describe('Performances', () => {
       expect(typeof res.body).toEqual('object');
     });
 
-    it('returns 200 with timeZoneOffset param', async () => {
+    xit('returns 200 with timeZoneOffset param', async () => {
       const res = await requestWithSupertest
         .get('/v1/performances')
         .query({
@@ -45,7 +45,7 @@ describe('Performances', () => {
       expect(typeof res.body).toEqual('object');
     });
 
-    it('returns 400 with timeZoneOffset param is NaN', async () => {
+    xit('returns 400 with timeZoneOffset param is NaN', async () => {
       const res = await requestWithSupertest
         .get('/v1/performances')
         .query({
@@ -61,14 +61,14 @@ describe('Performances', () => {
       );
     });
 
-    it('returns 401 when no token', async () => {
+    xit('returns 401 when no token', async () => {
       const res = await requestWithSupertest.get(
         '/v1/permissions/academic_profile_20100'
       );
       expect(res.status).toBe(401);
     });
 
-    it('returns 401 when wrong token', async () => {
+    xit('returns 401 when wrong token', async () => {
       const res = await requestWithSupertest
         .get('/v1/permissions/academic_profile_20100')
         .set('Authorization', 'wrong token');
@@ -78,7 +78,7 @@ describe('Performances', () => {
   });
 
   describe('GET /v1/performances/groups', () => {
-    it('returns 200', async () => {
+    xit('returns 200', async () => {
       const res = await requestWithSupertest
         .get('/v1/performances/groups')
         .set(
@@ -90,12 +90,12 @@ describe('Performances', () => {
       expect(typeof res.body).toEqual('object');
     });
 
-    it('returns 401 when no token', async () => {
+    xit('returns 401 when no token', async () => {
       const res = await requestWithSupertest.get('/v1/performances/skills');
       expect(res.status).toBe(401);
     });
 
-    it('returns 401 when wrong token', async () => {
+    xit('returns 401 when wrong token', async () => {
       const res = await requestWithSupertest
         .get('/v1/performances/skills')
         .set('Authorization', 'wrong token');
@@ -105,7 +105,7 @@ describe('Performances', () => {
   });
 
   describe('GET /v1/performances/skills', () => {
-    it('returns 200', async () => {
+    xit('returns 200', async () => {
       const res = await requestWithSupertest
         .get('/v1/performances/skills')
         .set(
@@ -117,12 +117,12 @@ describe('Performances', () => {
       expect(Array.isArray(res.body)).toBe(true);
     });
 
-    it('returns 401 when no token', async () => {
+    xit('returns 401 when no token', async () => {
       const res = await requestWithSupertest.get('/v1/performances/skills');
       expect(res.status).toBe(401);
     });
 
-    it('returns 401 when wrong token', async () => {
+    xit('returns 401 when wrong token', async () => {
       const res = await requestWithSupertest
         .get('/v1/performances/skills')
         .set('Authorization', 'wrong token');

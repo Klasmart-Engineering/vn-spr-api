@@ -17,7 +17,7 @@ for (const k in envConfig) {
 const requestWithSupertest = supertest(app);
 
 describe('GET /v1/classes', () => {
-  it('returns 200', async () => {
+  xit('returns 200', async () => {
     const res = await requestWithSupertest
       .get('/v1/classes')
       .set(
@@ -30,21 +30,16 @@ describe('GET /v1/classes', () => {
     expect(Array.isArray(res.body.classes)).toBe(true);
   });
 
-  it('returns 401 when no token', async () => {
-    const res = await requestWithSupertest
-      .get('/v1/classes');
+  xit('returns 401 when no token', async () => {
+    const res = await requestWithSupertest.get('/v1/classes');
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 when wrong token', async () => {
+  xit('returns 401 when wrong token', async () => {
     const res = await requestWithSupertest
       .get('/v1/classes')
-      .set(
-        'Authorization',
-        'wrong token'
-      );
+      .set('Authorization', 'wrong token');
 
     expect(res.status).toBe(401);
   });
-
 });

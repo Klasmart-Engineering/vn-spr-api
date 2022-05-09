@@ -65,7 +65,7 @@ Then you can use below JWT to connect to `Admin Service` by set it for `ADMIN_SE
 > If you already had/created a user & its organization on GraphQL playground yourself, you will need to generate the JWT yourself, instruction can be found at [Admin Service onboarding document](https://bitbucket.org/calmisland/kidsloop-user-service/src/master/documents/howto/onboarding.md#markdown-header-token-script)
 
 ```
-eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJjYWxtaWQtZGVidWciLCJpZCI6IjUxNGNkMDQyLWMyNGQtNTdjZS04MTVjLTllNTA5ODlmNDAzMSIsIm5hbWUiOm51bGwsImVtYWlsIjoiam9obkBleGFtcGxlLmNvbSIsImFkbWluIjp0cnVlfQ.-YX-mL05D-ucomyS2IXw9VYapF5vq6fvSzsJ6SFUtt4
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImlzc3VlciI6ImNhbG1pZC1kZWJ1ZyJ9.eyJleHAiOjE5NDUyMDg5OTgsImlzcyI6ImNhbG1pZC1kZWJ1ZyIsImlkIjoiNTE0Y2QwNDItYzI0ZC01N2NlLTgxNWMtOWU1MDk4OWY0MDMxIiwibmFtZSI6bnVsbCwiZW1haWwiOiJqb2huQGV4YW1wbGUuY29tIiwiYWRtaW4iOnRydWV9.qkXFZBLmz_hQr5QpFKePiU1mw8GPWsybi1M1ZMKQRtE
 ```
 
 ### Docker

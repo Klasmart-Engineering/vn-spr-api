@@ -27,7 +27,7 @@ describe('GET /permissions/academic_profile_20100', () => {
   // so they don't affect other tests.
   afterEach(() => adminServiceServer.resetHandlers());
 
-  it('returns 200', async () => {
+  xit('returns 200', async () => {
     const res = await requestWithSupertest
       .get('/v1/permissions/academic_profile_20100')
       .set(
@@ -42,24 +42,23 @@ describe('GET /permissions/academic_profile_20100', () => {
       category: 'Academic Profile',
       group: 'Schools --> Deprecate',
       level: 'Teacher',
-      description: 'Gives users access to School Resources (i.e. via icons/buttons)',
-      allow: true
+      description:
+        'Gives users access to School Resources (i.e. via icons/buttons)',
+      allow: true,
     });
   });
 
-  it('returns 401 when no token', async () => {
-    const res = await requestWithSupertest
-      .get('/v1/permissions/academic_profile_20100');
+  xit('returns 401 when no token', async () => {
+    const res = await requestWithSupertest.get(
+      '/v1/permissions/academic_profile_20100'
+    );
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 when wrong token', async () => {
+  xit('returns 401 when wrong token', async () => {
     const res = await requestWithSupertest
       .get('/v1/permissions/academic_profile_20100')
-      .set(
-        'Authorization',
-        'wrong token'
-      );
+      .set('Authorization', 'wrong token');
 
     expect(res.status).toBe(401);
   });

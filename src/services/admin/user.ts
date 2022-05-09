@@ -7,7 +7,7 @@ export const GET_USERS_BY_IDS = `
       direction: FORWARD
       directionArgs: { count: $count, cursor: $cursor }
       filter: {
-        status: { operator: eq, value: "active" }
+        userStatus: { operator: eq, value: "active" }
         {orConditions}
       }
     ) {

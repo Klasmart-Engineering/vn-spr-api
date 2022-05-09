@@ -1,6 +1,6 @@
 {
   "name": "vn-spr-api",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "(VN) Student Performance Report API",
   "main": "dist/app.js",
   "scripts": {

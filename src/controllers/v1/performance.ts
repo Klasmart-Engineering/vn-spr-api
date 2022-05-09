@@ -1,11 +1,27 @@
 import { faker } from '@faker-js/faker';
+import * as express from 'express';
 import random from 'random';
 import { Group } from 'src/models/group';
 import { PerformanceScore, SkillScore } from 'src/models/performance';
-import { Student } from 'src/models/student';
-import { Get, OperationId, Query, Route, Security, Tags } from 'tsoa';
+import { getGroups } from 'src/repositories';
+import { UUID } from 'src/types';
+import {
+  BadRequestErrorJSON,
+  InternalServerErrorJSON,
+  UnauthorizedErrorJSON,
+} from 'src/utils';
+import {
+  Get,
+  OperationId,
+  Query,
+  Request,
+  Response,
+  Route,
+  Security,
+  Tags,
+} from 'tsoa';
 
-export interface PeformanceGroupsResponse {
+export interface PerformanceGroupsResponse {
   above: Group;
   meets: Group;
   below: Group;
@@ -53,14 +69,17 @@ export default class PerformanceController {
   @OperationId('getPerformanceGroups')
   @Get('/groups')
   @Security('Authorization')
-  public async getPerformanceGroups(): Promise<PeformanceGroupsResponse> {
-    const performanceGroups: PeformanceGroupsResponse = {
-      above: this.generateGroup(),
-      meets: this.generateGroup(),
-      below: this.generateGroup(),
-    };
+  @Response<BadRequestErrorJSON>(400, 'bad request')
+  @Response<UnauthorizedErrorJSON>(401, 'unauthorized')
+  @Response<InternalServerErrorJSON>(500, 'internal server error')
+  public async getPerformanceGroups(
+    @Query() classId: UUID,
+    @Query() timezone: number,
+    @Request() request: express.Request
+  ): Promise<PerformanceGroupsResponse> {
+    const token = request.get('Authorization') as string;
 
-    return performanceGroups;
+    return await getGroups(classId, timezone, token);
   }
 
   @OperationId('getPerformanceSkills')
@@ -77,24 +96,6 @@ export default class PerformanceController {
     }
 
     return skillScoresReports;
-  }
-
-  private generateGroup(): Group {
-    const students: Array<Student> = [];
-    const totalStudents = random.int(1, 20);
-
-    for (let i = 0; i < totalStudents; i++) {
-      students.push({
-        student_id: faker.datatype.uuid(),
-        student_name: `${faker.name.firstName()} ${faker.name.lastName()}`,
-        avatar: faker.image.imageUrl(),
-      });
-    }
-
-    return {
-      total: totalStudents,
-      students: students,
-    };
   }
 
   private generateSkillScores() {

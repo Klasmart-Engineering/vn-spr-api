@@ -48,11 +48,13 @@ describe('AdminService', () => {
           id: '10f60763-c32b-4d48-9777-a0c1d28f6e85',
           givenName: 'John',
           familyName: 'Doe',
+          avatar: null,
         },
         {
           id: '5abd2d6e-fa9f-4026-a9c1-b6b47e557019',
           givenName: 'Jane',
           familyName: 'Doe',
+          avatar: null,
         },
       ]);
     });
