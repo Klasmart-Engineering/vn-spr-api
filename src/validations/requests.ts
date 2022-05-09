@@ -6,5 +6,5 @@ export const permissionSchema = Joi.object({
 
 export const groupsSchema = Joi.object({
   classId: Joi.string().guid().required(),
-  timezone: Joi.number().required(),
+  timezone: Joi.number().min(-12).max(14).required(),
 });

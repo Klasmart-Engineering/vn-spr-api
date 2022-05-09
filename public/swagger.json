@@ -367,7 +367,7 @@
 	},
 	"info": {
 		"title": "vn-spr-api",
-		"version": "1.1.0",
+		"version": "1.1.1",
 		"description": "(VN) Student Performance Report API",
 		"license": {
 			"name": "ISC"

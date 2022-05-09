@@ -47,7 +47,7 @@ router.get('/groups', async (req, res) => {
     const performancesController = new PerformanceController();
     const response = await performancesController.getPerformanceGroups(
       classId as string,
-      parseInt(timezone as string),
+      parseFloat(timezone as string),
       req
     );
 
