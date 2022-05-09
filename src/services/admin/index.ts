@@ -31,7 +31,7 @@ export type IdNameMapper = {
 
 export class AdminService {
   private static _instance: AdminService;
-  public readonly context: { headers: { Authorization: string } };
+  public context: { headers: { Authorization: string } };
 
   private constructor(
     private _client: ApolloClient<NormalizedCacheObject>,
@@ -40,8 +40,15 @@ export class AdminService {
     this.context = { headers: { Authorization: `${token}` } };
   }
 
+  public setToken(token: string) {
+    this.context = { headers: { Authorization: `${token}` } };
+  }
+
   public static async getInstance(token: string) {
-    if (this._instance) return this._instance;
+    if (this._instance){
+      this._instance.setToken(token);
+      return this._instance;
+    }
 
     if (!process.env.ADMIN_SERVICE_URL) {
       throw new Error(`Environment variable ADMIN_SERVICE_URL is invalid.`);
