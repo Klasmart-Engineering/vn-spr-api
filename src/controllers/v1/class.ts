@@ -1,38 +1,50 @@
-import { faker } from '@faker-js/faker';
-import random from 'random';
-import { Class } from 'src/models/class';
-import { Get, OperationId, Route, Security, Tags } from 'tsoa';
-
-export interface ClassesResponse {
-  total: number;
-  classes: Array<Class>;
-}
-
+import { checkAuthenticationToken } from '@kl-engineering/kidsloop-token-validation';
+import * as express from 'express';
+import { ClassesResponse } from 'src/models/class';
+import { getClasses } from 'src/repositories/class';
+import { UUID } from 'src/types';
+import {
+  BadRequestErrorJSON,
+  InternalServerErrorJSON,
+  UnauthorizedErrorJSON,
+} from 'src/utils/error';
+import {
+  Get,
+  OperationId,
+  Query,
+  Request,
+  Response,
+  Route,
+  Security,
+  Tags,
+} from 'tsoa';
 @Route('v1/classes')
 @Tags('classes')
 export default class ClassController {
   @OperationId('getClasses')
   @Get('/')
   @Security('Authorization')
-  public async getClasses(): Promise<ClassesResponse> {
-    const classes: Array<Class>  = [];
+  @Response<BadRequestErrorJSON>(400, 'bad request')
+  @Response<UnauthorizedErrorJSON>(401, 'unauthorized')
+  @Response<InternalServerErrorJSON>(500, 'internal server error')
+  public async getPerformanceClasses(
+    @Request() request: express.Request,
+    @Query() orgId: UUID,
+    @Query() isTeacher: boolean,
+    @Query() selectedDay = '',
+    @Query() timezone: number
+  ): Promise<ClassesResponse> {
+    const token = request.get('Authorization') as string;
+    const user = await checkAuthenticationToken(token);
+    if (!user.id) throw new Error('No userId in token');
 
-    for (let i = 0; i < 30; i++) {
-      classes.push({
-        class_id: faker.datatype.uuid(),
-        class_name: faker.name.jobTitle(),
-        performance: {
-          total_students: random.int(1, 20),
-          average_performance: random.float(0, 1),
-          today_total_classes:random.int(1, 20),
-          today_activities: random.int(1, 20)
-        }
-      })
-    }
-
-    return {
-      total: classes.length,
-      classes: classes
-    };
+    return await getClasses(
+      orgId,
+      user.id,
+      isTeacher,
+      selectedDay,
+      timezone,
+      token
+    );
   }
 }

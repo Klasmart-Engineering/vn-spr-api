@@ -16,13 +16,15 @@ import { User } from 'src/models';
 import { Entity, UUID } from 'src/types'; // TODO: can't use src/types <= why?
 import { stringInject } from 'src/utils';
 
-import { buildOrConditions } from './common';
+import { GET_CLASSES_OF_ORG_ID } from './class';
+import { buildAndConditions, buildOrConditions } from './common';
 import { GET_PERMISSION } from './permission';
 import { GET_USERS_BY_IDS } from './user';
 
 type SupportedConnections =
   | 'permissionsConnection'
-  | 'usersConnection';
+  | 'usersConnection'
+  | 'classesConnection';
 
 export type IdNameMapper = {
   id: UUID;
@@ -45,7 +47,7 @@ export class AdminService {
   }
 
   public static async getInstance(token: string) {
-    if (this._instance){
+    if (this._instance) {
       this._instance.setToken(token);
       return this._instance;
     }
@@ -185,6 +187,37 @@ export class AdminService {
     return users;
   }
 
+  public async getClassesOfOrgId(
+    orgId: UUID,
+    userId: UUID,
+    isTeacher: boolean
+  ): Promise<Array<{ id: UUID; name: string }>> {
+    const transformer = ({ id, name }: { id: UUID; name: string }) => ({
+      id,
+      name,
+    });
+    let query: string | undefined = GET_CLASSES_OF_ORG_ID;
+    if (isTeacher) {
+      const conditions = buildAndConditions({ teacherId: userId });
+      query = stringInject(GET_CLASSES_OF_ORG_ID, {
+        andConditions: conditions,
+      });
+      if (query === undefined) {
+        throw new Error(`Cannot prepare Admin Service classesConnection query`);
+      }
+    } else {
+      query = query.replace('{andConditions}', '');
+    }
+
+    const classes = await this.traversePaginatedQuery(
+      gql(query),
+      transformer,
+      'classesConnection',
+      { orgId }
+    );
+    return classes;
+  }
+
   /**
    * A helper function to send a request to a paginated API and walk the
    * full length of the cursor, collating all the responses before returning
@@ -233,6 +266,9 @@ export class AdminService {
         switch (connectionName) {
           case 'permissionsConnection':
             entity = Entity.PERMISSION;
+            break;
+          case 'classesConnection':
+            entity = Entity.CLASS;
             break;
           default:
             break;

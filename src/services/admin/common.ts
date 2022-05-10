@@ -30,3 +30,28 @@ export function buildOrConditions(ids: UUID[], idFilterName: string): string {
 
   return conditions;
 }
+
+/**
+ * Build GraphQL filter AND conditions
+ *
+ * Output:
+ *
+ * ```
+ *
+ * { name1: { operator: eq, value: "abcxyz" } }
+ * { name2: { operator: eq, value: "xyzabc" } }
+ *
+ * ```
+ *
+ * @param records { name1: "abcxyz", name2: "xyzabc"}
+ * @returns string
+ */
+export function buildAndConditions(records: Record<string, string>): string {
+  let conditions = '';
+  const keys = Object.keys(records);
+  for(let i = 0 ; i< keys.length; i++) {
+    const key = keys[i];
+    conditions += `${key}: { operator: eq, value: "${records[key]}" }`;
+  }
+  return conditions;
+}
