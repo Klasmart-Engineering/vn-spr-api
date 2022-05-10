@@ -16,7 +16,7 @@ model SwitchTable {
   /// in UTC yyyy-MM-dd HH:mm:ss
   updateAt  DateTime @updatedAt @map("update_ts")
 
-  @@map("switch_table")
+  @@map("reporting_spr_switch")
 }
 
 model ClassA {
