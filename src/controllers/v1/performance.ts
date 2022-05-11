@@ -5,7 +5,8 @@ import { Category, Group } from 'src/models';
 import { PerformanceScore, SkillScore } from 'src/models/performance';
 import { getGroups } from 'src/repositories';
 import { getCategories } from 'src/repositories/category';
-import { Days, UUID } from 'src/types';
+import { getScores } from 'src/repositories/performanceScore';
+import { Days, GroupType, UUID } from 'src/types';
 import {
   BadRequestErrorJSON,
   InternalServerErrorJSON,
@@ -44,32 +45,18 @@ export default class PerformanceController {
   @OperationId('getPerformanceScores')
   @Get('/')
   @Security('Authorization')
+  @Response<BadRequestErrorJSON>(400, 'bad request')
+  @Response<UnauthorizedErrorJSON>(401, 'unauthorized')
+  @Response<InternalServerErrorJSON>(500, 'internal server error')
   public async getPerformanceScores(
-    @Query() timeZoneOffset = 0
+    @Query() classId: UUID,
+    @Query() timezone: number,
+    @Query() days: Days,
+    @Query() viewLOs = false,
+    @Query() group: GroupType = 'all',
+    @Query() studentId = ''
   ): Promise<Array<PerformanceScore>> {
-    const performanceScores: Array<PerformanceScore> = [];
-
-    for (let i = 0; i < 5; i++) {
-      performanceScores.push({
-        name: new Date(faker.date.past().getTime() + timeZoneOffset * 1000)
-          .toISOString()
-          .split('T')[0],
-        above: random.int(1, 100),
-        meets: random.int(1, 100),
-        below: random.int(1, 100),
-        ...(random.boolean()
-          ? {
-              score: {
-                above: random.int(1, 100),
-                meets: random.int(1, 100),
-                below: random.int(1, 100),
-              },
-            }
-          : {}),
-      });
-    }
-
-    return performanceScores;
+    return await getScores(classId, timezone, days, viewLOs, group, studentId);
   }
 
   @OperationId('getPerformanceGroups')

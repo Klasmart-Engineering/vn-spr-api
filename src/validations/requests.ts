@@ -23,3 +23,12 @@ export const getClassesSchema = Joi.object({
   selectedDay: Joi.date().format('YYYY-MM-DD'),
   timezone: Joi.number().min(-12).max(14).required(),
 });
+
+export const getPerformanceScoreSchema = Joi.object({
+  classId: Joi.string().guid().required(),
+  timezone: Joi.number().min(-12).max(14).required(),
+  days: Joi.number().valid(7, 30, 365).required(),
+  viewLOs: Joi.boolean(),
+  group: Joi.string().valid('above', 'meets', 'below', 'all'),
+  studentId: Joi.string().guid(),
+});

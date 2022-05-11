@@ -1,27 +1,46 @@
 import express from 'express';
-import createError from 'http-errors';
 import PerformanceController from 'src/controllers/v1/performance';
 import { catchAsync } from 'src/utils';
-import { categoriesSchema, groupsSchema } from 'src/validations/requests';
+import {
+  categoriesSchema,
+  getPerformanceScoreSchema,
+  groupsSchema,
+} from 'src/validations/requests';
 
 const router = express.Router();
 
 router.get(
   '/',
   catchAsync(async (req, res) => {
-    const timeZoneOffset = parseInt(
-      req.query.timeZoneOffset?.toString() ?? '0'
+    const { classId, timezone, days, viewLOs, group, studentId } = req.query;
+    const { error, value } = getPerformanceScoreSchema.validate(
+      {
+        classId,
+        timezone,
+        days,
+        viewLOs,
+        group,
+        studentId,
+      },
+      { abortEarly: false }
     );
-
-    if (isNaN(timeZoneOffset)) {
-      throw createError(400, {
-        message: `timeZoneOffset param is not a number`,
+    if (error) {
+      return res.status(400).json({
+        message: 'bad request',
+        errors: error.details.map(
+          (detail: { message: string }) => detail.message
+        ),
       });
     }
 
     const performancesController = new PerformanceController();
     const response = await performancesController.getPerformanceScores(
-      timeZoneOffset
+      value.classId,
+      value.timezone,
+      value.days,
+      value.viewLOs,
+      value.group,
+      value.studentId
     );
 
     return res.status(200).json(response);

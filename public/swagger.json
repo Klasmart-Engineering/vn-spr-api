@@ -160,7 +160,7 @@
 						"type": "number",
 						"format": "double"
 					},
-					"score": {
+					"learningOutcome": {
 						"properties": {
 							"below": {
 								"type": "number",
@@ -175,22 +175,31 @@
 								"format": "double"
 							}
 						},
-						"required": [
-							"below",
-							"meets",
-							"above"
-						],
 						"type": "object"
 					}
 				},
 				"required": [
-					"name",
-					"above",
-					"meets",
-					"below"
+					"name"
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"Days": {
+				"type": "number",
+				"enum": [
+					7,
+					30,
+					365
+				]
+			},
+			"GroupType": {
+				"type": "string",
+				"enum": [
+					"above",
+					"meets",
+					"below",
+					"all"
+				]
 			},
 			"Student": {
 				"properties": {
@@ -287,14 +296,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"Days": {
-				"type": "number",
-				"enum": [
-					7,
-					30,
-					365
-				]
 			},
 			"SkillScore": {
 				"properties": {
@@ -552,6 +553,36 @@
 								}
 							}
 						}
+					},
+					"400": {
+						"description": "bad request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/BadRequestErrorJSON"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorJSON"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorJSON"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
@@ -565,12 +596,53 @@
 				"parameters": [
 					{
 						"in": "query",
-						"name": "timeZoneOffset",
-						"required": false,
+						"name": "classId",
+						"required": true,
 						"schema": {
-							"default": 0,
+							"$ref": "#/components/schemas/UUID"
+						}
+					},
+					{
+						"in": "query",
+						"name": "timezone",
+						"required": true,
+						"schema": {
 							"format": "double",
 							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "days",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/Days"
+						}
+					},
+					{
+						"in": "query",
+						"name": "viewLOs",
+						"required": false,
+						"schema": {
+							"default": false,
+							"type": "boolean"
+						}
+					},
+					{
+						"in": "query",
+						"name": "group",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/GroupType"
+						}
+					},
+					{
+						"in": "query",
+						"name": "studentId",
+						"required": false,
+						"schema": {
+							"default": "",
+							"type": "string"
 						}
 					}
 				]

@@ -7,13 +7,13 @@ export interface Performance {
 
 export interface PerformanceScore {
   name: string;
-  above: number;
-  meets: number;
-  below: number;
-  score?: {
-    above: number;
-    meets: number;
-    below: number;
+  above?: number;
+  meets?: number;
+  below?: number;
+  learningOutcome?: {
+    above?: number;
+    meets?: number;
+    below?: number;
   };
 }
 

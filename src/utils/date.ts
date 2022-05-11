@@ -9,3 +9,7 @@ export const dateDiff = (fromDate: Date, toDate: Date) => {
 export const plusDate = (date: Date, days: number) => {
   return new Date(date.getTime() + days * 24 * 3600 * 1000);
 }
+
+export const subtractDate = (date: Date, days: number) => {
+  return new Date(date.getTime() - days * 24 * 3600 * 1000);
+}
