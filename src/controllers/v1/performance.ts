@@ -6,11 +6,7 @@ import { PerformanceScore, SkillScore } from 'src/models/performance';
 import { getGroups } from 'src/repositories';
 import { getCategories } from 'src/repositories/category';
 import { getScores } from 'src/repositories/performanceScore';
-<<<<<<< HEAD
 import { Days, GroupType, UUID } from 'src/types';
-=======
-import { Days, UUID } from 'src/types';
->>>>>>> 23984ad (feat: student overall performance)
 import {
   BadRequestErrorJSON,
   InternalServerErrorJSON,
