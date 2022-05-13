@@ -1,13 +1,24 @@
 import { PrismaClient } from '@prisma/client';
+import { GROUP_BELOW_THRESHOLD, GROUP_UPPER_THRESHOLD } from 'src/config';
 import { PerformanceScore } from 'src/models/performance';
 import { Days, GroupType, ReportEntity, UUID } from 'src/types';
 import { getVerInUse } from 'src/utils/database';
-import { dateDiff, plusDate, subtractDate } from 'src/utils/date';
+import {
+  generateDates,
+  generateDatesForYear,
+  groupScoresByDateRanges,
+  groupScoresByDateRangesForYear,
+} from 'src/utils/date';
 import { toFixedNumber } from 'src/utils/number';
-import { isAbove, isBelow, isMeets } from 'src/utils/performanceGroup';
+import {
+  getGroupOfAverageScore,
+  isAbove,
+  isBelow,
+  isMeets,
+} from 'src/utils/performanceGroup';
 
 import {
-  getStudentsPerformLO,
+  getSPLsByStudentIds,
   PerformanceLORecord,
 } from './performanceLearningOutcome';
 
@@ -15,6 +26,7 @@ export interface PerformanceScoreRecord {
   studentId: UUID;
   sps: number;
   day: string;
+  average: number;
 }
 
 const prisma = new PrismaClient();
@@ -27,113 +39,116 @@ export const getScores = async (
   group: GroupType,
   studentId: UUID
 ) => {
-  let groupLO = group;
-
   const studentsScore = await getStudentScores(
     classId,
     timezone,
     days,
+    group,
     studentId
   );
 
   let studentsPerformanceLO: Array<PerformanceLORecord> = [];
   if (viewLOs) {
-    studentsPerformanceLO = await getStudentsPerformLO(
+    studentsPerformanceLO = await getSPLsByStudentIds(
       classId,
       timezone,
       days,
-      studentId
+      studentsScore.map((student) => student.studentId)
     );
   }
 
   if (studentId) {
-    const averageSPSOfStudent =
-      (studentsScore
-        .map((student) => student.sps)
-        .reduce((sps1, sps2) => sps1 + sps2, 0) /
-        studentsScore.length) |
-      0;
-    group = isAbove(averageSPSOfStudent)
-      ? 'above'
-      : isMeets(averageSPSOfStudent)
-      ? 'meets'
-      : 'below';
-    if (viewLOs) {
-      const averageSPLOfStudent =
-        (studentsPerformanceLO
-          .map((student) => student.spl)
-          .reduce((spl1, spl2) => spl1 + spl2, 0) /
-          studentsPerformanceLO.length) |
-        0;
-      groupLO = isAbove(averageSPLOfStudent)
-        ? 'above'
-        : isMeets(averageSPLOfStudent)
-        ? 'meets'
-        : 'below';
-    }
+    const studentAverage =
+      studentsScore.find((item) => item.studentId === studentId)?.average ?? 0;
+    group = getGroupOfAverageScore(studentAverage);
   }
 
   const performanceScores: Array<PerformanceScore> = [];
   const timezoneInSeconds = timezone * 60 * 60;
   const toDate = new Date(Date.now() + timezoneInSeconds * 1000);
-  const fromDate = subtractDate(toDate, days);
 
-  for (let i = 0; i <= dateDiff(fromDate, toDate); i++) {
-    const date = new Date(plusDate(fromDate, i).getTime());
-    const day = date.toISOString().split('T')[0];
+  let dates = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let groupSPSByDate: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let groupSPLByDate: Record<string, any>;
+  if (days !== 365) {
+    let step = -1;
+    let numberOfDates = 7;
 
-    performanceScores.push({
-      name: day,
-      ...(group === 'all' || group === 'above'
-        ? {
-            above: averageSPSOfGroupByDay(studentsScore, day, isAbove),
-          }
-        : {}),
-      ...(group === 'all' || group === 'meets'
-        ? {
-            meets: averageSPSOfGroupByDay(studentsScore, day, isMeets),
-          }
-        : {}),
-      ...(group === 'all' || group === 'below'
-        ? {
-            below: averageSPSOfGroupByDay(studentsScore, day, isBelow),
-          }
-        : {}),
-      ...(viewLOs
-        ? {
-            learningOutcome: {
-              ...(groupLO === 'all' || groupLO === 'above'
-                ? {
-                    above: averageSPLOfGroupByDay(
-                      studentsPerformanceLO,
-                      day,
-                      isAbove
-                    ),
-                  }
-                : {}),
-              ...(groupLO === 'all' || groupLO === 'meets'
-                ? {
-                    meets: averageSPLOfGroupByDay(
-                      studentsPerformanceLO,
-                      day,
-                      isMeets
-                    ),
-                  }
-                : {}),
-              ...(groupLO === 'all' || groupLO === 'below'
-                ? {
-                    below: averageSPLOfGroupByDay(
-                      studentsPerformanceLO,
-                      day,
-                      isBelow
-                    ),
-                  }
-                : {}),
-            },
-          }
-        : {}),
-    });
+    if (days == 30) {
+      // will aggregate scores by week
+      step = -7;
+      numberOfDates = 4;
+    }
+    dates = generateDates(toDate, numberOfDates, step);
+    groupSPSByDate = groupScoresByDateRanges(dates, studentsScore);
+    groupSPLByDate = groupScoresByDateRanges(dates, studentsPerformanceLO);
+  } else {
+    dates = generateDatesForYear(toDate);
+    groupSPSByDate = groupScoresByDateRangesForYear(dates, studentsScore);
+    groupSPLByDate = groupScoresByDateRangesForYear(
+      dates,
+      studentsPerformanceLO
+    );
   }
+
+  Object.keys(groupSPSByDate).forEach((key) => {
+    const spsByDate: { name: string; data: PerformanceScoreRecord[] } =
+      groupSPSByDate[key];
+    const splByDate: { name: string; data: PerformanceLORecord[] } =
+      groupSPLByDate[key];
+    const performanceScoreItem: PerformanceScore = { name: spsByDate.name };
+    const isAll = group === 'all';
+
+    if (isAll || group === 'above') {
+      const aboveStudents = isAll
+        ? spsByDate.data.filter((item) => isAbove(item.average))
+        : spsByDate.data;
+      performanceScoreItem.above = averageSPSOfGroup(aboveStudents);
+      if (viewLOs) {
+        performanceScoreItem.learningOutcome = {};
+        performanceScoreItem.learningOutcome.above = averageSPLOfGroup(
+          splByDate.data,
+          aboveStudents.map((item) => item.studentId)
+        );
+      }
+    }
+
+    if (isAll || group === 'meets') {
+      const meetsStudents = isAll
+        ? spsByDate.data.filter((item) => isMeets(item.average))
+        : spsByDate.data;
+      performanceScoreItem.meets = averageSPSOfGroup(meetsStudents);
+      if (viewLOs) {
+        const tmpLO = performanceScoreItem.learningOutcome ?? {};
+        delete performanceScoreItem.learningOutcome;
+        performanceScoreItem.learningOutcome = tmpLO;
+        performanceScoreItem.learningOutcome.meets = averageSPLOfGroup(
+          splByDate.data,
+          meetsStudents.map((item) => item.studentId)
+        );
+      }
+    }
+
+    if (isAll || group === 'below') {
+      const belowStudents = isAll
+        ? spsByDate.data.filter((item) => isBelow(item.average))
+        : spsByDate.data;
+      performanceScoreItem.below = averageSPSOfGroup(belowStudents);
+      if (viewLOs) {
+        const tmpLO = performanceScoreItem.learningOutcome ?? {};
+        delete performanceScoreItem.learningOutcome;
+        performanceScoreItem.learningOutcome = tmpLO;
+        performanceScoreItem.learningOutcome.below = averageSPLOfGroup(
+          splByDate.data,
+          belowStudents.map((item) => item.studentId)
+        );
+      }
+    }
+
+    performanceScores.push(performanceScoreItem);
+  });
 
   return performanceScores;
 };
@@ -142,8 +157,9 @@ export const getStudentScores = async (
   classId: UUID,
   timezone: number,
   days: number,
+  group: GroupType,
   studentId?: UUID
-): Promise<Array<{ studentId: UUID; sps: number; day: string }>> => {
+): Promise<Array<PerformanceScoreRecord>> => {
   const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_SCORE);
   let tableName = 'reporting_spr_perform_by_score_A';
   if (verInUse === 'B') {
@@ -154,24 +170,81 @@ export const getStudentScores = async (
   const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
   const daysAgoTimestampSQL = `(${nowTimestampSQL} - (${days} * 3600 * 24))`;
 
-  const sql = `
-  SELECT
-    student_id AS studentId,
-    (SUM(achieved_score) * 100 / SUM(total_score)) AS sps,
+  const selectDaySQL = `
     CASE WHEN start_at = 0 THEN
       DATE_FORMAT(FROM_UNIXTIME(due_at + ${timezoneInSeconds}), '%Y-%m-%d')
     ELSE
       DATE_FORMAT(FROM_UNIXTIME(start_at + ${timezoneInSeconds}), '%Y-%m-%d')
-    END AS day
-  FROM
-    ${tableName}
-  WHERE
-    class_id = '${classId}'
-  ${studentId ? `AND student_id = '${studentId}'` : ``}
-  GROUP BY studentId, day
-  HAVING
+    END
+  `;
+
+  const dayConditionSQL = `
     day >= DATE_FORMAT(FROM_UNIXTIME(${daysAgoTimestampSQL}), '%Y-%m-%d') AND
     day <= DATE_FORMAT(FROM_UNIXTIME(${nowTimestampSQL}), '%Y-%m-%d')
+  `;
+
+  const classConditionSQL = `
+    class_id = '${classId}'
+  `;
+
+  const generateGroupStudentSQL = (groupType: GroupType) => {
+    switch (groupType) {
+      case 'above':
+        return `AND average >= ${GROUP_UPPER_THRESHOLD}`;
+      case 'meets':
+        return `AND average >= ${GROUP_BELOW_THRESHOLD} AND average < ${GROUP_UPPER_THRESHOLD}`;
+      case 'below':
+        return `AND average < ${GROUP_BELOW_THRESHOLD}`;
+      default:
+        return '';
+    }
+  };
+
+  const sql = `
+  SELECT
+      tb_score.student_id AS studentId,
+      ${selectDaySQL} AS day,
+      (SUM(achieved_score) * 100 / SUM(total_score)) AS sps,
+      tb_average.average
+  FROM ${tableName} AS tb_score,
+    (
+        SELECT student_id, AVG(sps) AS average
+        FROM
+        (
+            SELECT
+                student_id,
+                (SUM(achieved_score) * 100 / SUM(total_score)) AS sps,
+                ${selectDaySQL} AS day
+            FROM ${tableName}
+            WHERE
+                ${classConditionSQL}
+                ${
+                  group === 'all' && studentId
+                    ? `AND student_id = '${studentId}'`
+                    : ''
+                }
+            GROUP BY
+                student_id, day
+            HAVING
+                ${dayConditionSQL}
+        ) AS tb_score_day
+        GROUP BY
+            student_id
+    ) AS tb_average
+  WHERE
+      tb_score.student_id = tb_average.student_id
+  AND
+      ${classConditionSQL}
+      ${
+        group === 'all' && studentId
+          ? `AND tb_score.student_id = '${studentId}'`
+          : ''
+      }
+      ${generateGroupStudentSQL(group)}
+  GROUP BY
+      tb_score.student_id, day
+  HAVING
+      ${dayConditionSQL}
   ORDER BY day DESC;
   `;
 
@@ -223,13 +296,12 @@ export const getStudentsScoreOfDay = async ({
   return studentsScore;
 };
 
-const averageSPLOfGroupByDay = (
+const averageSPLOfGroup = (
   studentsPerformanceLO: Array<PerformanceLORecord>,
-  day: string,
-  groupCondition: (spl: number) => boolean
+  studentIds: UUID[]
 ) => {
-  const group = studentsPerformanceLO.filter(
-    (student) => student.day === day && groupCondition(student.spl)
+  const group = studentsPerformanceLO.filter((student) =>
+    studentIds.includes(student.studentId)
   );
 
   if (group.length === 0) return 0;
@@ -241,20 +313,12 @@ const averageSPLOfGroupByDay = (
   return toFixedNumber(sumSPL / group.length, 2);
 };
 
-const averageSPSOfGroupByDay = (
-  studentsScore: Array<PerformanceScoreRecord>,
-  day: string,
-  groupCondition: (sps: number) => boolean
-) => {
-  const group = studentsScore.filter(
-    (student) => student.day === day && groupCondition(student.sps)
-  );
+const averageSPSOfGroup = (studentsScore: Array<PerformanceScoreRecord>) => {
+  if (studentsScore.length === 0) return 0;
 
-  if (group.length === 0) return 0;
-
-  const sumSPS = group
+  const sumSPS = studentsScore
     .map((student) => student.sps)
     .reduce((sps1, sps2) => sps1 + sps2, 0);
 
-  return toFixedNumber(sumSPS / group.length, 2);
+  return toFixedNumber(sumSPS / studentsScore.length, 2);
 };

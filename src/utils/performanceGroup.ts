@@ -11,3 +11,13 @@ export const isMeets = (percent: number): boolean => {
 export const isBelow = (percent: number): boolean => {
   return percent < GROUP_BELOW_THRESHOLD;
 }
+
+export const getGroupOfAverageScore = (studentAverage: number) => {
+  if (isAbove(studentAverage)) {
+    return 'above';
+  }
+  if (isBelow(studentAverage)) {
+    return 'below';
+  }
+  return 'meets';
+}

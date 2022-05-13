@@ -31,4 +31,4 @@ export const getPerformanceScoreSchema = Joi.object({
   viewLOs: Joi.boolean(),
   group: Joi.string().valid('above', 'meets', 'below', 'all'),
   studentId: Joi.string().guid(),
-});
+}).xor('group','studentId');

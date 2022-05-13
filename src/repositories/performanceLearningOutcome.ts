@@ -10,12 +10,14 @@ export interface PerformanceLORecord {
 
 const prisma = new PrismaClient();
 
-export const getStudentsPerformLO = async (
+export const getSPLsByStudentIds = async (
   classId: UUID,
   timezone: number,
   days: number,
-  studentId?: UUID
+  studentIds: UUID[]
 ): Promise<Array<PerformanceLORecord>> => {
+  if (studentIds.length === 0) return [];
+
   const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_LEARNING_OUTCOME);
   let tableName = 'reporting_spr_perform_by_lo_A';
   if (verInUse === 'B') {
@@ -39,13 +41,14 @@ export const getStudentsPerformLO = async (
       ${tableName}
     WHERE
       class_id = '${classId}'
-    ${studentId ? `AND student_id = '${studentId}'` : ``}
+    AND student_id IN (${studentIds.map((item) => `'${item}'`).join(',')})
     GROUP BY studentId, day
     HAVING
       day >= DATE_FORMAT(FROM_UNIXTIME(${daysAgoTimestampSQL}), '%Y-%m-%d') AND
       day <= DATE_FORMAT(FROM_UNIXTIME(${nowTimestampSQL}), '%Y-%m-%d')
     ORDER BY day DESC;
     `;
+
   const studentsPerformLO = await prisma.$queryRawUnsafe(`${sql}`);
   if (!Array.isArray(studentsPerformLO))
     throw new Error('Failed to get students performance LO');
