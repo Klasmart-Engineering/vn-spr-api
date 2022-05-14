@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { GROUP_BELOW_THRESHOLD, GROUP_UPPER_THRESHOLD } from 'src/config';
 import { PerformanceScore } from 'src/models/performance';
 import { Days, GroupType, ReportEntity, UUID } from 'src/types';
 import { getVerInUse } from 'src/utils/database';
@@ -17,6 +16,7 @@ import {
   isMeets,
 } from 'src/utils/performanceGroup';
 
+import { getStudentsScoreByDay } from './group';
 import {
   getSPLsByStudentIds,
   PerformanceLORecord,
@@ -39,12 +39,51 @@ export const getScores = async (
   group: GroupType,
   studentId: UUID
 ) => {
-  const studentsScore = await getStudentScores(
+  const studentsScoreByDay = await getStudentsScoreByDay(classId, timezone);
+  if (!Array.isArray(studentsScoreByDay)) {
+    throw new Error(`Failed to get students score.`);
+  }
+  if (!studentsScoreByDay.length) {
+    // doesn't have any data in DB
+    return [];
+  }
+
+  const studentIdsWithScoreAndDaysCount: Record<
+    string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Record<string, any>
+  > = {};
+  studentsScoreByDay.forEach((s) => {
+    if (!studentIdsWithScoreAndDaysCount[s.student_id]) {
+      studentIdsWithScoreAndDaysCount[s.student_id] = {
+        days: 1,
+        totalScore: s.score,
+      };
+    } else {
+      studentIdsWithScoreAndDaysCount[s.student_id].days += 1;
+      studentIdsWithScoreAndDaysCount[s.student_id].totalScore += s.score;
+    }
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let studentIdsWithAverage: Record<string, Record<string, any>> = {};
+  Object.keys(studentIdsWithScoreAndDaysCount).forEach((student_id) => {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    const { days, totalScore } = studentIdsWithScoreAndDaysCount[student_id];
+    studentIdsWithAverage[student_id] = {
+      days: days,
+      totalScore: totalScore,
+      average: totalScore / days,
+    };
+  });
+
+  studentIdsWithAverage = filterStudentsByGroup(studentIdsWithAverage, group);
+
+  const studentsScore = await getSPSsByStudentIds(
     classId,
     timezone,
     days,
-    group,
-    studentId
+    Object.keys(studentIdsWithAverage)
   );
 
   let studentsPerformanceLO: Array<PerformanceLORecord> = [];
@@ -58,9 +97,7 @@ export const getScores = async (
   }
 
   if (studentId) {
-    const studentAverage =
-      studentsScore.find((item) => item.studentId === studentId)?.average ?? 0;
-    group = getGroupOfAverageScore(studentAverage);
+    group = getGroupOfAverageScore(studentIdsWithAverage[studentId].average);
   }
 
   const performanceScores: Array<PerformanceScore> = [];
@@ -103,7 +140,9 @@ export const getScores = async (
 
     if (isAll || group === 'above') {
       const aboveStudents = isAll
-        ? spsByDate.data.filter((item) => isAbove(item.average))
+        ? spsByDate.data.filter((s) =>
+            isAbove(studentIdsWithAverage[s.studentId].average)
+          )
         : spsByDate.data;
       performanceScoreItem.above = averageSPSOfGroup(aboveStudents);
       if (viewLOs) {
@@ -117,13 +156,15 @@ export const getScores = async (
 
     if (isAll || group === 'meets') {
       const meetsStudents = isAll
-        ? spsByDate.data.filter((item) => isMeets(item.average))
+        ? spsByDate.data.filter((s) =>
+            isMeets(studentIdsWithAverage[s.studentId].average)
+          )
         : spsByDate.data;
       performanceScoreItem.meets = averageSPSOfGroup(meetsStudents);
       if (viewLOs) {
-        const tmpLO = performanceScoreItem.learningOutcome ?? {};
-        delete performanceScoreItem.learningOutcome;
-        performanceScoreItem.learningOutcome = tmpLO;
+        performanceScoreItem.learningOutcome = {
+          ...performanceScoreItem.learningOutcome,
+        };
         performanceScoreItem.learningOutcome.meets = averageSPLOfGroup(
           splByDate.data,
           meetsStudents.map((item) => item.studentId)
@@ -133,13 +174,15 @@ export const getScores = async (
 
     if (isAll || group === 'below') {
       const belowStudents = isAll
-        ? spsByDate.data.filter((item) => isBelow(item.average))
+        ? spsByDate.data.filter((s) =>
+            isBelow(studentIdsWithAverage[s.studentId].average)
+          )
         : spsByDate.data;
       performanceScoreItem.below = averageSPSOfGroup(belowStudents);
       if (viewLOs) {
-        const tmpLO = performanceScoreItem.learningOutcome ?? {};
-        delete performanceScoreItem.learningOutcome;
-        performanceScoreItem.learningOutcome = tmpLO;
+        performanceScoreItem.learningOutcome = {
+          ...performanceScoreItem.learningOutcome,
+        };
         performanceScoreItem.learningOutcome.below = averageSPLOfGroup(
           splByDate.data,
           belowStudents.map((item) => item.studentId)
@@ -147,20 +190,32 @@ export const getScores = async (
       }
     }
 
-    performanceScores.push(performanceScoreItem);
+    //Reorganize order
+    performanceScores.push(
+      JSON.parse(
+        JSON.stringify(performanceScoreItem, [
+          'name',
+          'above',
+          'meets',
+          'below',
+          'learningOutcome',
+        ])
+      )
+    );
   });
 
   return performanceScores;
 };
 
-export const getStudentScores = async (
+export const getSPSsByStudentIds = async (
   classId: UUID,
   timezone: number,
   days: number,
-  group: GroupType,
-  studentId?: UUID
+  studentIds: UUID[]
 ): Promise<Array<PerformanceScoreRecord>> => {
-  const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_SCORE);
+  if (studentIds.length === 0) return [];
+
+  const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_LEARNING_OUTCOME);
   let tableName = 'reporting_spr_perform_by_score_A';
   if (verInUse === 'B') {
     tableName = 'reporting_spr_perform_by_score_B';
@@ -170,88 +225,31 @@ export const getStudentScores = async (
   const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
   const daysAgoTimestampSQL = `(${nowTimestampSQL} - (${days} * 3600 * 24))`;
 
-  const selectDaySQL = `
-    CASE WHEN start_at = 0 THEN
-      DATE_FORMAT(FROM_UNIXTIME(due_at + ${timezoneInSeconds}), '%Y-%m-%d')
-    ELSE
-      DATE_FORMAT(FROM_UNIXTIME(start_at + ${timezoneInSeconds}), '%Y-%m-%d')
-    END
-  `;
-
-  const dayConditionSQL = `
-    day >= DATE_FORMAT(FROM_UNIXTIME(${daysAgoTimestampSQL}), '%Y-%m-%d') AND
-    day <= DATE_FORMAT(FROM_UNIXTIME(${nowTimestampSQL}), '%Y-%m-%d')
-  `;
-
-  const classConditionSQL = `
-    class_id = '${classId}'
-  `;
-
-  const generateGroupStudentSQL = (groupType: GroupType) => {
-    switch (groupType) {
-      case 'above':
-        return `AND average >= ${GROUP_UPPER_THRESHOLD}`;
-      case 'meets':
-        return `AND average >= ${GROUP_BELOW_THRESHOLD} AND average < ${GROUP_UPPER_THRESHOLD}`;
-      case 'below':
-        return `AND average < ${GROUP_BELOW_THRESHOLD}`;
-      default:
-        return '';
-    }
-  };
-
   const sql = `
-  SELECT
-      tb_score.student_id AS studentId,
-      ${selectDaySQL} AS day,
+    SELECT
+      student_id AS studentId,
       (SUM(achieved_score) * 100 / SUM(total_score)) AS sps,
-      tb_average.average
-  FROM ${tableName} AS tb_score,
-    (
-        SELECT student_id, AVG(sps) AS average
-        FROM
-        (
-            SELECT
-                student_id,
-                (SUM(achieved_score) * 100 / SUM(total_score)) AS sps,
-                ${selectDaySQL} AS day
-            FROM ${tableName}
-            WHERE
-                ${classConditionSQL}
-                ${
-                  group === 'all' && studentId
-                    ? `AND student_id = '${studentId}'`
-                    : ''
-                }
-            GROUP BY
-                student_id, day
-            HAVING
-                ${dayConditionSQL}
-        ) AS tb_score_day
-        GROUP BY
-            student_id
-    ) AS tb_average
-  WHERE
-      tb_score.student_id = tb_average.student_id
-  AND
-      ${classConditionSQL}
-      ${
-        group === 'all' && studentId
-          ? `AND tb_score.student_id = '${studentId}'`
-          : ''
-      }
-      ${generateGroupStudentSQL(group)}
-  GROUP BY
-      tb_score.student_id, day
-  HAVING
-      ${dayConditionSQL}
-  ORDER BY day DESC;
-  `;
+      CASE WHEN start_at = 0 THEN
+        DATE_FORMAT(FROM_UNIXTIME(due_at + ${timezoneInSeconds}), '%Y-%m-%d')
+      ELSE
+        DATE_FORMAT(FROM_UNIXTIME(start_at + ${timezoneInSeconds}), '%Y-%m-%d')
+      END AS day
+    FROM
+      ${tableName}
+    WHERE
+      class_id = '${classId}'
+    AND student_id IN (${studentIds.map((item) => `'${item}'`).join(',')})
+    GROUP BY studentId, day
+    HAVING
+      day >= DATE_FORMAT(FROM_UNIXTIME(${daysAgoTimestampSQL}), '%Y-%m-%d') AND
+      day <= DATE_FORMAT(FROM_UNIXTIME(${nowTimestampSQL}), '%Y-%m-%d')
+    ORDER BY day DESC;
+    `;
 
-  const studentsScore = await prisma.$queryRawUnsafe(`${sql}`);
-  if (!Array.isArray(studentsScore))
-    throw new Error('Failed to get students score');
-  return studentsScore;
+  const studentsPerformLO = await prisma.$queryRawUnsafe(`${sql}`);
+  if (!Array.isArray(studentsPerformLO))
+    throw new Error('Failed to get students performance score');
+  return studentsPerformLO;
 };
 
 export const getStudentsScoreOfDay = async ({
@@ -321,4 +319,38 @@ const averageSPSOfGroup = (studentsScore: Array<PerformanceScoreRecord>) => {
     .reduce((sps1, sps2) => sps1 + sps2, 0);
 
   return toFixedNumber(sumSPS / studentsScore.length, 2);
+};
+
+const filterStudentsByGroup = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  studentIdsWithAverage: Record<string, any>,
+  group: GroupType
+) => {
+  if (group === 'all') return studentIdsWithAverage;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tempStudentIdsWithAverage: Record<string, any> = {};
+  switch (group) {
+    case 'above':
+      Object.keys(studentIdsWithAverage).forEach((k) => {
+        if (isAbove(studentIdsWithAverage[k].average)) {
+          tempStudentIdsWithAverage[k] = studentIdsWithAverage[k];
+        }
+      });
+      break;
+    case 'meets':
+      Object.keys(studentIdsWithAverage).forEach((k) => {
+        if (isMeets(studentIdsWithAverage[k].average)) {
+          tempStudentIdsWithAverage[k] = studentIdsWithAverage[k];
+        }
+      });
+      break;
+    case 'below':
+      Object.keys(studentIdsWithAverage).forEach((k) => {
+        if (isBelow(studentIdsWithAverage[k].average)) {
+          tempStudentIdsWithAverage[k] = studentIdsWithAverage[k];
+        }
+      });
+      break;
+  }
+  return tempStudentIdsWithAverage;
 };

@@ -28,7 +28,7 @@ export const getGroups = async (
   if (!Array.isArray(studentsScoreByDay)) {
     throw new Error(`Failed to get students score.`);
   }
-  if (!studentsScoreByDay) {
+  if (!studentsScoreByDay.length) {
     // doesn't have any data in DB
     return groups;
   }
@@ -100,7 +100,7 @@ export const getGroups = async (
   return groups;
 };
 
-const getStudentsScoreByDay = async (
+export const getStudentsScoreByDay = async (
   classId: string,
   timezone: number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
