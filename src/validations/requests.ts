@@ -31,4 +31,13 @@ export const getPerformanceScoreSchema = Joi.object({
   viewLOs: Joi.boolean(),
   group: Joi.string().valid('above', 'meets', 'below', 'all'),
   studentId: Joi.string().guid(),
-}).xor('group','studentId');
+}).xor('group', 'studentId');
+
+export const performancesSkillsSchema = Joi.object({
+  classId: Joi.string().guid().required(),
+  timezone: Joi.number().min(-12).max(14).required(),
+  days: Joi.number().valid(7, 30, 365).required(),
+  viewLOs: Joi.boolean().required(),
+  group: Joi.string().valid('above', 'meets', 'below', 'all'),
+  studentId: Joi.string().guid(),
+}).xor('group', 'studentId');

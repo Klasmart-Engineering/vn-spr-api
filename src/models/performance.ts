@@ -17,14 +17,21 @@ export interface PerformanceScore {
   };
 }
 
-export interface SkillScore {
-  name: string; //'Cognitive Skill' | 'Subject Matter' | 'Speech & Language' | 'Personal Development' | 'Gross Motor Skills';
+export interface SkillLearningOutcome {
   achieved: number;
   notAchieved: number;
   total: number;
-  score?: {
-    achieved: number;
-    notAchieved: number;
-    total: number;
-  };
+}
+
+export interface PerformanceSubcategories {
+  name: string;
+  achieved: number;
+  notAchieved: number;
+  total: number;
+  learningOutcome?: SkillLearningOutcome;
+}
+
+export interface PerformanceSkill {
+  category: string;
+  subcategories: PerformanceSubcategories[];
 }

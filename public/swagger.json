@@ -214,9 +214,7 @@
 					}
 				},
 				"required": [
-					"student_id",
-					"student_name",
-					"avatar"
+					"student_id"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -297,7 +295,30 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"SkillScore": {
+			"SkillLearningOutcome": {
+				"properties": {
+					"achieved": {
+						"type": "number",
+						"format": "double"
+					},
+					"notAchieved": {
+						"type": "number",
+						"format": "double"
+					},
+					"total": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"achieved",
+					"notAchieved",
+					"total"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PerformanceSubcategories": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -314,27 +335,8 @@
 						"type": "number",
 						"format": "double"
 					},
-					"score": {
-						"properties": {
-							"total": {
-								"type": "number",
-								"format": "double"
-							},
-							"notAchieved": {
-								"type": "number",
-								"format": "double"
-							},
-							"achieved": {
-								"type": "number",
-								"format": "double"
-							}
-						},
-						"required": [
-							"total",
-							"notAchieved",
-							"achieved"
-						],
-						"type": "object"
+					"learningOutcome": {
+						"$ref": "#/components/schemas/SkillLearningOutcome"
 					}
 				},
 				"required": [
@@ -346,21 +348,21 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"SkillScoresReport": {
+			"PerformanceSkill": {
 				"properties": {
-					"date": {
+					"category": {
 						"type": "string"
 					},
-					"data": {
+					"subcategories": {
 						"items": {
-							"$ref": "#/components/schemas/SkillScore"
+							"$ref": "#/components/schemas/PerformanceSubcategories"
 						},
 						"type": "array"
 					}
 				},
 				"required": [
-					"date",
-					"data"
+					"category",
+					"subcategories"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -814,9 +816,39 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/SkillScoresReport"
+										"$ref": "#/components/schemas/PerformanceSkill"
 									},
 									"type": "array"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "bad request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/BadRequestErrorJSON"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorJSON"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorJSON"
 								}
 							}
 						}
@@ -830,7 +862,60 @@
 						"Authorization": []
 					}
 				],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "query",
+						"name": "classId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/UUID"
+						}
+					},
+					{
+						"in": "query",
+						"name": "timezone",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "days",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/Days"
+						}
+					},
+					{
+						"in": "query",
+						"name": "viewLOs",
+						"required": false,
+						"schema": {
+							"default": false,
+							"type": "boolean"
+						}
+					},
+					{
+						"description": "requires if `studentId` is empty",
+						"in": "query",
+						"name": "group",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/GroupType"
+						}
+					},
+					{
+						"description": "requires if `group` is empty",
+						"in": "query",
+						"name": "studentId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/v1/permissions/{name}": {

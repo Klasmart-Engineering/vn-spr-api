@@ -1,14 +1,19 @@
 import { PrismaClient } from '@prisma/client';
-import { PerformanceScore } from 'src/models/performance';
+import {
+  PerformanceScore,
+  PerformanceSkill,
+  PerformanceSubcategories,
+} from 'src/models/performance';
 import { Days, GroupType, ReportEntity, UUID } from 'src/types';
-import { getVerInUse } from 'src/utils/database';
 import {
   generateDates,
   generateDatesForYear,
+  getVerInUse,
+  groupBy,
   groupScoresByDateRanges,
   groupScoresByDateRangesForYear,
-} from 'src/utils/date';
-import { toFixedNumber } from 'src/utils/number';
+  toFixedNumber,
+} from 'src/utils';
 import {
   getGroupOfAverageScore,
   isAbove,
@@ -19,8 +24,12 @@ import {
 import { getStudentsScoreByDay } from './group';
 import {
   getSPLsByStudentIds,
+  getSubcategoriesLOsByStudentIds,
   PerformanceLORecord,
+  SubcategoryLO,
 } from './performanceLearningOutcome';
+
+import { getStudentIdsFromGroups, getStudentsInGroups } from '.';
 
 export interface PerformanceScoreRecord {
   studentId: UUID;
@@ -29,7 +38,9 @@ export interface PerformanceScoreRecord {
   average: number;
 }
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
+});
 
 export const getScores = async (
   classId: UUID,
@@ -225,6 +236,13 @@ export const getSPSsByStudentIds = async (
   const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
   const daysAgoTimestampSQL = `(${nowTimestampSQL} - (${days} * 3600 * 24))`;
 
+  let userWhereCondition = '';
+  if (studentIds.length > 0) {
+    userWhereCondition = `AND student_id IN (${studentIds
+      .map((item) => `'${item}'`)
+      .join(',')})`;
+  }
+
   const sql = `
     SELECT
       student_id AS studentId,
@@ -238,7 +256,7 @@ export const getSPSsByStudentIds = async (
       ${tableName}
     WHERE
       class_id = '${classId}'
-    AND student_id IN (${studentIds.map((item) => `'${item}'`).join(',')})
+      ${userWhereCondition}
     GROUP BY studentId, day
     HAVING
       day >= DATE_FORMAT(FROM_UNIXTIME(${daysAgoTimestampSQL}), '%Y-%m-%d') AND
@@ -353,4 +371,139 @@ const filterStudentsByGroup = (
       break;
   }
   return tempStudentIdsWithAverage;
+};
+
+/**
+ * If `student_id` has value, will ignore `group`
+ *
+ * @param classId
+ * @param timezone
+ * @param days
+ * @param viewLOs
+ * @param group
+ * @param studentId
+ * @returns
+ */
+export const getScoresOfSubcategories = async (
+  classId: UUID,
+  timezone: number,
+  days: Days,
+  viewLOs: boolean,
+  group: GroupType,
+  studentId: UUID
+): Promise<PerformanceSkill[]> => {
+  const studentsInGroups = await getStudentsInGroups(
+    classId,
+    timezone,
+    studentId
+  );
+  // Get student IDs for getting scores
+  let studentIds: string[] = [];
+  if (studentId) {
+    studentIds.push(studentId);
+  } else {
+    studentIds = getStudentIdsFromGroups(studentsInGroups, group);
+  }
+
+  // Get students' score of subcategories
+  const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_SCORE);
+  const tableName = `reporting_spr_perform_by_score_${verInUse}`;
+  const timezoneInSeconds = timezone * 60 * 60;
+  const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
+  const daysAgoTimestampSQL = `(${nowTimestampSQL} - (${days} * 3600 * 24))`;
+
+  const dateCaseWhenSQL = `
+  CASE WHEN start_at = 0 THEN
+    DATE_FORMAT(FROM_UNIXTIME(due_at + ${timezoneInSeconds}), '%Y-%m-%d')
+  ELSE
+    DATE_FORMAT(FROM_UNIXTIME(start_at + ${timezoneInSeconds}), '%Y-%m-%d')
+  END`;
+
+  let userWhereCondition = '';
+  if (studentIds.length > 0) {
+    userWhereCondition = `AND student_id IN (${studentIds
+      .map((item) => `'${item}'`)
+      .join(',')})`;
+  }
+
+  const sql = `
+  SELECT
+    category,
+    category_name AS categoryName,
+    subcategory,
+	  subcategory_name AS name,
+    SUM(achieved_score) AS achieved,
+    SUM(total_score) - SUM(achieved_score) AS notAchieved,
+	  SUM(total_score) AS total
+  FROM
+    ${tableName}
+  WHERE
+    class_id = '${classId}'
+    AND DATE_FORMAT(FROM_UNIXTIME(${daysAgoTimestampSQL}), '%Y-%m-%d') < ${dateCaseWhenSQL}
+    AND DATE_FORMAT(FROM_UNIXTIME(${nowTimestampSQL}), '%Y-%m-%d') >= ${dateCaseWhenSQL}
+    ${userWhereCondition}
+  GROUP BY category, category_name, subcategory, subcategory_name;
+  `;
+
+  const studentsSkillPerformance = await prisma.$queryRawUnsafe(`${sql}`);
+  if (!Array.isArray(studentsSkillPerformance))
+    throw new Error('Failed to get students score with subcategories.');
+  if (!studentsSkillPerformance.length) return [];
+
+  const groupSkillByCategory = groupBy(studentsSkillPerformance, 'category');
+
+  // Get learning outcomes
+  let subcategoriesLOs: Record<string, SubcategoryLO[]>;
+  if (viewLOs) {
+    subcategoriesLOs = await getSubcategoriesLOsByStudentIds(
+      classId,
+      timezone,
+      days,
+      studentIds
+    );
+  }
+
+  const result: PerformanceSkill[] = [];
+  Object.keys(groupSkillByCategory).map((categoryId) => {
+    const subcategories: PerformanceSubcategories[] = [];
+    groupSkillByCategory[categoryId].map(
+      ({
+        name,
+        subcategoryId,
+        achieved,
+        notAchieved,
+        total,
+      }: {
+        name: string;
+        subcategoryId: UUID;
+        achieved: number;
+        notAchieved: number;
+        total: number;
+      }) => {
+        const skill: PerformanceSubcategories = {
+          name,
+          achieved,
+          notAchieved,
+          total,
+        };
+        if (viewLOs) {
+          const skillLO = subcategoriesLOs[subcategoryId]?.find(
+            (lo) => lo.subcategory === subcategoryId
+          );
+          skill.learningOutcome = {
+            achieved: skillLO?.achieved || 0,
+            notAchieved: skillLO?.notAchieved || 0,
+            total: skillLO?.total || 0,
+          };
+        }
+        subcategories.push(skill);
+      }
+    );
+    result.push({
+      category: groupSkillByCategory[categoryId].categoryName,
+      subcategories: subcategories,
+    });
+  });
+
+  return result;
 };

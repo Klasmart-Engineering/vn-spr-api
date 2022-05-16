@@ -5,6 +5,7 @@ import {
   categoriesSchema,
   getPerformanceScoreSchema,
   groupsSchema,
+  performancesSkillsSchema,
 } from 'src/validations/requests';
 
 const router = express.Router();
@@ -102,11 +103,44 @@ router.get(
   })
 );
 
-router.get('/skills', async (_, res) => {
-  const performancesController = new PerformanceController();
-  const response = await performancesController.getSkillScores();
+router.get(
+  '/skills',
+  catchAsync(async (req, res) => {
+    const { classId, timezone, days, viewLOs, group, studentId } = req.query;
+    const { error, value } = performancesSkillsSchema.validate(
+      {
+        classId,
+        timezone,
+        days,
+        viewLOs,
+        group,
+        studentId,
+      },
+      {
+        abortEarly: false,
+      }
+    );
+    if (error) {
+      return res.status(400).json({
+        message: 'bad request',
+        errors: error.details.map(
+          (detail: { message: string }) => detail.message
+        ),
+      });
+    }
 
-  return res.status(200).json(response);
-});
+    const performancesController = new PerformanceController();
+    const response = await performancesController.getSkillScores(
+      value.classId,
+      value.timezone,
+      value.days,
+      value.viewLOs,
+      value.group,
+      value.studentId
+    );
+
+    return res.status(200).json(response);
+  })
+);
 
 export default router;
