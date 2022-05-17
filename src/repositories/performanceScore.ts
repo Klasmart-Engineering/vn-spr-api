@@ -502,7 +502,7 @@ export const getScoresOfSubcategories = async (
       }
     );
     result.push({
-      category: groupSkillByCategory[categoryId].categoryName,
+      category: groupSkillByCategory[categoryId][0].categoryName,
       subcategories: subcategories,
     });
   });
