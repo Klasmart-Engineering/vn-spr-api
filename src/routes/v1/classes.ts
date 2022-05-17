@@ -8,9 +8,9 @@ const router = express.Router();
 router.get(
   '/',
   catchAsync(async (req, res) => {
-    const { orgId, isTeacher, selectedDay, timezone } = req.query;
+    const { orgId, isTeacher, timezone } = req.query;
     const { error, value } = getClassesSchema.validate(
-      { orgId, isTeacher, selectedDay, timezone },
+      { orgId, isTeacher, timezone },
       { abortEarly: false }
     );
 
@@ -29,7 +29,6 @@ router.get(
         req,
         value.orgId,
         value.isTeacher,
-        value.selectedDay,
         value.timezone
       );
 

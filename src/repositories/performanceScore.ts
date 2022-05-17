@@ -270,14 +270,12 @@ export const getSPSsByStudentIds = async (
   return studentsPerformLO;
 };
 
-export const getStudentsScoreOfDay = async ({
+export const getTodayStudentsScore = async ({
   orgId,
-  selectedDay,
-  timezoneInSeconds,
+  timezone,
 }: {
   orgId: UUID;
-  selectedDay: string;
-  timezoneInSeconds: number;
+  timezone: number;
 }): Promise<
   Array<{ classId: UUID; studentId: UUID; sps: number; day: string }>
 > => {
@@ -286,6 +284,10 @@ export const getStudentsScoreOfDay = async ({
   if (verInUse === 'B') {
     tableName = 'reporting_spr_perform_by_score_B';
   }
+
+  const timezoneInSeconds = timezone * 60 * 60;
+  const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
+
   const sql = `
     SELECT
       class_id AS classId,
@@ -302,13 +304,13 @@ export const getStudentsScoreOfDay = async ({
       org_id = '${orgId}'
     GROUP BY classId, studentId, day
     HAVING
-      day = DATE_FORMAT('${selectedDay}', '%Y-%m-%d')
+      day = DATE_FORMAT(FROM_UNIXTIME(${nowTimestampSQL}), '%Y-%m-%d')
     ORDER BY day DESC;
     `;
 
   const studentsScore = await prisma.$queryRawUnsafe(`${sql}`);
   if (!Array.isArray(studentsScore))
-    throw new Error('Failed to get students score');
+    throw new Error('Failed to get today students score');
   return studentsScore;
 };
 

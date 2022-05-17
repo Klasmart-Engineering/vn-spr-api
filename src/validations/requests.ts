@@ -20,7 +20,6 @@ export const categoriesSchema = Joi.object({
 export const getClassesSchema = Joi.object({
   orgId: Joi.string().guid().required(),
   isTeacher: Joi.boolean().required(),
-  selectedDay: Joi.date().format('YYYY-MM-DD'),
   timezone: Joi.number().min(-12).max(14).required(),
 });
 

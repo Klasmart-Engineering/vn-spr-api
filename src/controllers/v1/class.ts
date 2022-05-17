@@ -31,7 +31,6 @@ export default class ClassController {
     @Request() request: express.Request,
     @Query() orgId: UUID,
     @Query() isTeacher: boolean,
-    @Query() selectedDay = '',
     @Query() timezone: number
   ): Promise<ClassesResponse> {
     const token = request.get('Authorization') as string;
@@ -42,7 +41,6 @@ export default class ClassController {
       orgId,
       user.id,
       isTeacher,
-      selectedDay,
       timezone,
       token
     );

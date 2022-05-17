@@ -5,8 +5,8 @@ import { ReportEntity, UUID } from 'src/types';
 import { getVerInUse } from 'src/utils/database';
 import { toFixedNumber } from 'src/utils/number';
 
-import { getStudentsScoreOfDay } from './performanceScore';
-import { getSchedulesOfDay } from './schedule';
+import { getTodayStudentsScore } from './performanceScore';
+import { getTodaySchedules } from './schedule';
 
 const prisma = new PrismaClient();
 
@@ -14,7 +14,6 @@ export const getClasses = async (
   orgId: UUID,
   userId: UUID,
   isTeacher: boolean,
-  selectedDay: string,
   timezone: number,
   token: string
 ) => {
@@ -31,23 +30,18 @@ export const getClasses = async (
 
   if (classesOfUser.length === 0) return classesResponse;
 
-  const timezoneInSeconds = timezone * 60 * 60;
-  selectedDay = selectedDay ?? new Date(Date.now() + timezoneInSeconds * 1000).toISOString().split('T')[0];
-
   const classes = await getClassesInIds({
     orgId,
     classIds: (await classesOfUser).map((item) => item.id),
   });
 
-  const todaySchedules = await getSchedulesOfDay({
+  const todaySchedules = await getTodaySchedules({
     orgId,
-    selectedDay,
-    timezoneInSeconds,
+    timezone,
   });
-  const todayStudentsScore = await getStudentsScoreOfDay({
+  const todayStudentsScore = await getTodayStudentsScore({
     orgId,
-    selectedDay,
-    timezoneInSeconds,
+    timezone,
   });
 
   const classesData: Array<ClassData> = [];

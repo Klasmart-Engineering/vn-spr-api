@@ -520,15 +520,6 @@
 					},
 					{
 						"in": "query",
-						"name": "selectedDay",
-						"required": false,
-						"schema": {
-							"default": "",
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
 						"name": "timezone",
 						"required": true,
 						"schema": {
