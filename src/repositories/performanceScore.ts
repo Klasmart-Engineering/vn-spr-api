@@ -50,7 +50,8 @@ export const getScores = async (
   group: GroupType,
   studentId: UUID
 ) => {
-  const studentsScoreByDay = await getStudentsScoreByDay(classId, timezone);
+  let studentsScoreByDay = await getStudentsScoreByDay(classId, timezone);
+
   if (!Array.isArray(studentsScoreByDay)) {
     throw new Error(`Failed to get students score.`);
   }
@@ -58,7 +59,9 @@ export const getScores = async (
     // doesn't have any data in DB
     return [];
   }
-
+  if(studentId) {
+    studentsScoreByDay = studentsScoreByDay.filter(s => s.student_id === studentId);
+  }
   const studentIdsWithScoreAndDaysCount: Record<
     string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

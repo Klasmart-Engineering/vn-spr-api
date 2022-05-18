@@ -1,9 +1,10 @@
 import { PrismaClient } from '@prisma/client';
-import { GROUP_UPPER_THRESHOLD, SPS_INTERVAL_IN_DAYS } from 'src/config';
+import { SPS_INTERVAL_IN_DAYS } from 'src/config';
 import { Group } from 'src/models';
 import { getUsersByIds } from 'src/repositories';
 import { GroupType, ReportEntity, UUID } from 'src/types';
 import { getVerInUse } from 'src/utils/database';
+import { isAbove, isBelow } from 'src/utils/performanceGroup';
 
 const prisma = new PrismaClient();
 
@@ -73,14 +74,14 @@ export const getGroups = async (
   studentIds.forEach((studentId) => {
     const { totalScore, days } = studentIdsWithScoreAndDaysCount[studentId];
     const sps = totalScore / days; // weekly average student performance score
-    if (sps >= GROUP_UPPER_THRESHOLD) {
+    if (isAbove(sps)) {
       groups.above.total += 1;
       groups.above.students.push({
         student_id: studentId,
         student_name: usersInfoWithKeys[studentId]?.name || 'Unknown User',
         avatar: usersInfoWithKeys[studentId]?.avatar || null,
       });
-    } else if (sps < GROUP_UPPER_THRESHOLD) {
+    } else if (isBelow(sps)) {
       groups.below.total += 1;
       groups.below.students.push({
         student_id: studentId,
@@ -145,12 +146,12 @@ export const getStudentsInGroups = async (
     const { totalScore, days } =
       studentIdsWithScoreAndDaysCount[student.student_id];
     const sps = totalScore / days; // student average performance score
-    if (sps >= GROUP_UPPER_THRESHOLD) {
+    if (isAbove(sps)) {
       groups.above.total += 1;
       groups.above.students.push({
         student_id: student.student_id,
       });
-    } else if (sps < GROUP_UPPER_THRESHOLD) {
+    } else if (isBelow(sps)) {
       groups.below.total += 1;
       groups.below.students.push({
         student_id: student.student_id,
