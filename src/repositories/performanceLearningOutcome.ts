@@ -116,7 +116,6 @@ export const getSubcategoriesLOsByStudentIds = async (
       ${tableName}
     WHERE
       class_id = '${classId}'
-      AND category != ''
       AND DATE_FORMAT(FROM_UNIXTIME(${daysAgoTimestampSQL}), '%Y-%m-%d') < ${dateCaseWhenSQL}
       AND DATE_FORMAT(FROM_UNIXTIME(${nowTimestampSQL}), '%Y-%m-%d') >= ${dateCaseWhenSQL}
       ${userWhereCondition}
