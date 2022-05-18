@@ -59,8 +59,10 @@ export const getScores = async (
     // doesn't have any data in DB
     return [];
   }
-  if(studentId) {
-    studentsScoreByDay = studentsScoreByDay.filter(s => s.student_id === studentId);
+  if (studentId) {
+    studentsScoreByDay = studentsScoreByDay.filter(
+      (s) => s.student_id === studentId
+    );
   }
   const studentIdsWithScoreAndDaysCount: Record<
     string,
@@ -230,10 +232,7 @@ export const getSPSsByStudentIds = async (
   if (studentIds.length === 0) return [];
 
   const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_LEARNING_OUTCOME);
-  let tableName = 'reporting_spr_perform_by_score_A';
-  if (verInUse === 'B') {
-    tableName = 'reporting_spr_perform_by_score_B';
-  }
+  const tableName = `reporting_spr_perform_by_score_${verInUse}`;
 
   const timezoneInSeconds = timezone * 60 * 60;
   const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
@@ -283,10 +282,7 @@ export const getTodayStudentsScore = async ({
   Array<{ classId: UUID; studentId: UUID; sps: number; day: string }>
 > => {
   const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_SCORE);
-  let tableName = 'reporting_spr_perform_by_score_A';
-  if (verInUse === 'B') {
-    tableName = 'reporting_spr_perform_by_score_B';
-  }
+  const tableName = `reporting_spr_perform_by_score_${verInUse}`;
 
   const timezoneInSeconds = timezone * 60 * 60;
   const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
@@ -474,13 +470,13 @@ export const getScoresOfSubcategories = async (
     groupSkillByCategory[categoryId].map(
       ({
         name,
-        subcategoryId,
+        subcategory,
         achieved,
         notAchieved,
         total,
       }: {
         name: string;
-        subcategoryId: UUID;
+        subcategory: UUID;
         achieved: number;
         notAchieved: number;
         total: number;
@@ -492,8 +488,8 @@ export const getScoresOfSubcategories = async (
           total,
         };
         if (viewLOs) {
-          const skillLO = subcategoriesLOs[subcategoryId]?.find(
-            (lo) => lo.subcategory === subcategoryId
+          const skillLO = subcategoriesLOs[categoryId]?.find(
+            (lo) => lo.subcategory === subcategory
           );
           skill.learningOutcome = {
             achieved: skillLO?.achieved || 0,
