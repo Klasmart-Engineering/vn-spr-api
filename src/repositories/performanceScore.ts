@@ -492,9 +492,15 @@ export const getScoresOfSubcategories = async (
             (lo) => lo.subcategory === subcategory
           );
           skill.learningOutcome = {
-            achieved: skillLO?.achieved || 0,
-            notAchieved: skillLO?.notAchieved || 0,
-            total: skillLO?.total || 0,
+            achieved: skillLO?.achieved
+              ? toFixedNumber(skillLO?.achieved / studentIds.length, 1)
+              : 0,
+            notAchieved: skillLO?.notAchieved
+              ? toFixedNumber(skillLO?.notAchieved / studentIds.length, 1)
+              : 0,
+            total: skillLO?.total
+              ? toFixedNumber(skillLO?.total / studentIds.length, 1)
+              : 0,
           };
         }
         subcategories.push(skill);
