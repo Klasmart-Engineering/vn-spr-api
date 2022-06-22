@@ -100,10 +100,7 @@ const getClassesInIds = async ({
   }>
 > => {
   const verInUse = await getVerInUse(ReportEntity.CLASS);
-  let tableName = 'reporting_spr_class_roster_A';
-  if (verInUse === 'B') {
-    tableName = 'reporting_spr_class_roster_B';
-  }
+  const tableName = `reporting_spr_class_roster_${verInUse}`;
 
   const sql = `
     SELECT

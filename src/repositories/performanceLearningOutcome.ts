@@ -32,10 +32,7 @@ export const getSPLsByStudentIds = async (
   if (studentIds.length === 0) return [];
 
   const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_LEARNING_OUTCOME);
-  let tableName = 'reporting_spr_perform_by_lo_A';
-  if (verInUse === 'B') {
-    tableName = 'reporting_spr_perform_by_lo_B';
-  }
+  const tableName = `reporting_spr_perform_by_lo_${verInUse}`;
 
   const timezoneInSeconds = timezone * 60 * 60;
   const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;

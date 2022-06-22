@@ -2,7 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import { ReportEntity, UUID } from 'src/types';
 import { getVerInUse } from 'src/utils/database';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
+});
 
 export const getTodaySchedules = async ({
   orgId,
@@ -14,10 +16,7 @@ export const getTodaySchedules = async ({
   Array<{ scheduleId: UUID; classId: UUID; totalActivities: number }>
 > => {
   const verInUse = await getVerInUse(ReportEntity.SCHEDULE);
-  let tableName = 'reporting_spr_scheduled_classes_A';
-  if (verInUse === 'B') {
-    tableName = 'reporting_spr_scheduled_classes_B';
-  }
+  const tableName = `reporting_spr_scheduled_classes_${verInUse}`;
 
   const timezoneInSeconds = timezone * 60 * 60;
   const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;

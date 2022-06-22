@@ -206,10 +206,7 @@ export const getStudentsScoreByDay = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<Record<string, any>[] | null> => {
   const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_SCORE);
-  let tableName = 'reporting_spr_perform_by_score_A';
-  if (verInUse === 'B') {
-    tableName = 'reporting_spr_perform_by_score_B';
-  }
+  const tableName = `reporting_spr_perform_by_score_${verInUse}`;
 
   const timezoneInSeconds = timezone * 60 * 60;
   const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
