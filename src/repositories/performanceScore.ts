@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import {
   PerformanceScore,
   PerformanceSkill,
   PerformanceSubcategories,
 } from 'src/models/performance';
+import prisma from 'src/prismaClient';
 import { Days, GroupType, ReportEntity, UUID } from 'src/types';
 import {
   generateDates,
@@ -14,6 +14,7 @@ import {
   groupScoresByDateRangesForYear,
   toFixedNumber,
 } from 'src/utils';
+import { getTodayStudentsScoreSQL } from 'src/utils';
 import {
   getGroupOfAverageScore,
   isAbove,
@@ -37,10 +38,6 @@ export interface PerformanceScoreRecord {
   day: string;
   average: number;
 }
-
-const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-});
 
 export const getScores = async (
   classId: UUID,
@@ -281,33 +278,9 @@ export const getTodayStudentsScore = async ({
 }): Promise<
   Array<{ classId: UUID; studentId: UUID; sps: number; day: string }>
 > => {
-  const verInUse = await getVerInUse(ReportEntity.PERFORMANCE_SCORE);
-  const tableName = `reporting_spr_perform_by_score_${verInUse}`;
+  const sql = await getTodayStudentsScoreSQL(orgId, timezone);
+  const studentsScore = await prisma.$queryRaw(sql);
 
-  const timezoneInSeconds = timezone * 60 * 60;
-  const nowTimestampSQL = `UNIX_TIMESTAMP() + ${timezoneInSeconds}`;
-
-  const sql = `
-    SELECT
-      class_id AS classId,
-      student_id AS studentId,
-      (SUM(achieved_score) * 100 / SUM(total_score)) AS sps,
-      CASE WHEN start_at = 0 THEN
-        DATE_FORMAT(FROM_UNIXTIME(due_at + ${timezoneInSeconds}), '%Y-%m-%d')
-      ELSE
-        DATE_FORMAT(FROM_UNIXTIME(start_at + ${timezoneInSeconds}), '%Y-%m-%d')
-      END AS day
-    FROM
-      ${tableName}
-    WHERE
-      org_id = '${orgId}'
-    GROUP BY classId, studentId, day
-    HAVING
-      day = DATE_FORMAT(FROM_UNIXTIME(${nowTimestampSQL}), '%Y-%m-%d')
-    ORDER BY day DESC;
-    `;
-
-  const studentsScore = await prisma.$queryRawUnsafe(`${sql}`);
   if (!Array.isArray(studentsScore))
     throw new Error('Failed to get today students score');
   return studentsScore;

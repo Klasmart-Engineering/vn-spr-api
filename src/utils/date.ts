@@ -129,3 +129,7 @@ export const groupScoresByDateRangesForYear = (
 
   return result;
 };
+
+export const timezoneToSeconds = (timezone: number) => {
+  return timezone * 60 * 60;
+}

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from 'src/prismaClient';
 import { ReportEntity, UUID } from 'src/types';
 import { groupBy } from 'src/utils';
 import { getVerInUse } from 'src/utils/database';
@@ -18,10 +18,6 @@ export interface SubcategoryLO {
   notAchieved: number;
   total: number;
 }
-
-const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-});
 
 export const getSPLsByStudentIds = async (
   classId: UUID,

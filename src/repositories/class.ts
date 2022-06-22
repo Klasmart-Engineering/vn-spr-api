@@ -1,14 +1,12 @@
-import { PrismaClient } from '@prisma/client';
 import { ClassData, ClassesResponse } from 'src/models/class';
+import prisma from 'src/prismaClient';
 import { AdminService } from 'src/services';
-import { ReportEntity, UUID } from 'src/types';
-import { getVerInUse } from 'src/utils/database';
+import { UUID } from 'src/types';
+import { getClassesInIdsSQL } from 'src/utils';
 import { toFixedNumber } from 'src/utils/number';
 
 import { getTodayStudentsScore } from './performanceScore';
 import { getTodaySchedules } from './schedule';
-
-const prisma = new PrismaClient();
 
 export const getClasses = async (
   orgId: UUID,
@@ -58,12 +56,17 @@ export const getClasses = async (
       .map((student) => student.sps)
       .reduce((score1, score2) => score1 + score2, 0);
 
+    let averagePerformance = 0;
+    if (studentsScoreOfClass.length !== 0) {
+      averagePerformance = toFixedNumber(
+        sumStudentsScore / studentsScoreOfClass.length,
+        2
+      );
+    }
+
     const performanceData = {
       total_students: currentClass.totalStudents,
-      average_performance: toFixedNumber(
-        (sumStudentsScore / studentsScoreOfClass.length) | 0,
-        2
-      ),
+      average_performance: averagePerformance,
       today_total_classes: todaySchedulesOfClass.length,
       today_activities: todaySchedulesOfClass
         .map((schedule) => schedule.totalActivities)
@@ -99,21 +102,8 @@ const getClassesInIds = async ({
     studentIds: string;
   }>
 > => {
-  const verInUse = await getVerInUse(ReportEntity.CLASS);
-  const tableName = `reporting_spr_class_roster_${verInUse}`;
-
-  const sql = `
-    SELECT
-      class_id AS classId,
-      class_name AS className,
-      total_students AS totalStudents,
-      student_ids AS studentIds
-    FROM ${tableName}
-    WHERE org_id = '${orgId}'
-    AND class_id IN(${classIds.map((item) => `'${item}'`).join(',')})
-    `;
-
-  const classes = await prisma.$queryRawUnsafe(`${sql}`);
+  const sql = await getClassesInIdsSQL(orgId, classIds);
+  const classes = await prisma.$queryRaw(sql);
   if (!Array.isArray(classes)) throw new Error('Failed to get classes');
   return classes;
 };

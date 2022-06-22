@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { Category } from 'src/models';
+import prisma from 'src/prismaClient';
 import { ReportEntity } from 'src/types';
 import { getVerInUse } from 'src/utils/database';
-
-const prisma = new PrismaClient();
 
 export const getCategories = async (
   classId: string,

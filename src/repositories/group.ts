@@ -1,12 +1,10 @@
-import { PrismaClient } from '@prisma/client';
 import { SPS_INTERVAL_IN_DAYS } from 'src/config';
 import { Group } from 'src/models';
+import prisma from 'src/prismaClient';
 import { getUsersByIds } from 'src/repositories';
 import { GroupType, ReportEntity, UUID } from 'src/types';
 import { getVerInUse } from 'src/utils/database';
 import { isAbove, isBelow } from 'src/utils/performanceGroup';
-
-const prisma = new PrismaClient();
 
 export interface PerformanceGroups {
   above: Group;
