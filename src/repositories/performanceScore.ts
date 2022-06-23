@@ -455,10 +455,10 @@ export const getScoresOfSubcategories = async (
         total: number;
       }) => {
         const skill: PerformanceSubcategories = {
-          name,
-          achieved,
-          notAchieved,
-          total,
+          name: name,
+          achieved: toFixedNumber(achieved / studentIds.length, 1),
+          notAchieved: toFixedNumber(notAchieved / studentIds.length, 1),
+          total: toFixedNumber(total / studentIds.length, 1),
         };
         if (viewLOs) {
           const skillLO = subcategoriesLOs[categoryId]?.find(
