@@ -466,13 +466,13 @@ export const getScoresOfSubcategories = async (
           );
           skill.learningOutcome = {
             achieved: skillLO?.achieved
-              ? toFixedNumber(skillLO?.achieved / studentIds.length, 1)
+              ? toFixedNumber(skillLO?.achieved / studentIds.length, 0)
               : 0,
             notAchieved: skillLO?.notAchieved
-              ? toFixedNumber(skillLO?.notAchieved / studentIds.length, 1)
+              ? toFixedNumber(skillLO?.notAchieved / studentIds.length, 0)
               : 0,
             total: skillLO?.total
-              ? toFixedNumber(skillLO?.total / studentIds.length, 1)
+              ? toFixedNumber(skillLO?.total / studentIds.length, 0)
               : 0,
           };
         }
